@@ -66,6 +66,119 @@ const scaffoldingByCategory = {
   }
 };
 
+const reflectionPrompts = {
+  correct: {
+    title: "What helped you on this round?",
+    copy:
+      "Pick the move that best matches how you made this decision so you can notice what strong reasoning looked like."
+  },
+  incorrect: {
+    title: "What will you try next time?",
+    copy:
+      "Choose the strategy you want to use on the next round so a miss turns into a concrete adjustment."
+  },
+  timeout: {
+    title: "What would help next time?",
+    copy:
+      "Pick the move that would help you decide a little faster and a little more confidently on the next round."
+  }
+};
+
+const reflectionFocusByCategory = {
+  "CS Hallucinations": [
+    {
+      id: "hallucination-docs-tools",
+      success: "I trusted docs and tools more than the chatbot's confident tone.",
+      next: "Next time I'll check docs and tools before trusting the claim.",
+      timeout: "Next time I'll go straight to docs or tools when a claim sounds polished.",
+      summary: "You kept returning to docs and tools as your first reality check."
+    },
+    {
+      id: "hallucination-source-check",
+      success: "I checked whether the method, citation, or source could actually be verified.",
+      next: "Next time I'll question missing or broken sources earlier.",
+      timeout: "Next time I'll scan for missing sources before I overthink the wording.",
+      summary: "You practiced checking whether a cited method or source was real."
+    },
+    {
+      id: "hallucination-slow-down",
+      success: "I slowed down when the answer sounded believable but unsupported.",
+      next: "Next time I'll pause when an answer sounds polished without evidence.",
+      timeout: "Next time I'll slow down just long enough to question confident wording.",
+      summary: "You reflected on slowing down when confident claims lacked evidence."
+    }
+  ],
+  "Code Verification": [
+    {
+      id: "code-known-tests",
+      success: "I imagined a quick known-answer test before trusting the code.",
+      next: "Next time I'll test the code with a known answer before I trust it.",
+      timeout: "Next time I'll jump to a quick test case instead of rereading the code.",
+      summary: "You kept using quick known-answer tests as your first verification move."
+    },
+    {
+      id: "code-edge-cases",
+      success: "I looked for edge cases, boundaries, or hidden assumptions.",
+      next: "Next time I'll look for edge cases, boundaries, or hidden assumptions first.",
+      timeout: "Next time I'll scan for boundary conditions before the timer starts to squeeze me.",
+      summary: "You often reflected on edge cases and boundary conditions."
+    },
+    {
+      id: "code-behavior-over-style",
+      success: "I focused on whether the code's behavior matched the claim, not whether it looked clean.",
+      next: "Next time I'll focus on behavior instead of trusting clean-looking code.",
+      timeout: "Next time I'll ask what behavior would prove or disprove the claim fastest.",
+      summary: "You practiced checking code behavior instead of relying on surface polish."
+    }
+  ],
+  "Prompt Surgery": [
+    {
+      id: "prompt-student-thinking",
+      success: "I asked whether the prompt kept the student's own thinking in charge.",
+      next: "Next time I'll ask whether the prompt keeps the student's own thinking in charge.",
+      timeout: "Next time I'll quickly check who is doing the thinking: the student or the AI.",
+      summary: "You kept returning to whether the student's own thinking stayed central."
+    },
+    {
+      id: "prompt-hints-not-answers",
+      success: "I looked for hints, explanations, or tests instead of ready-to-submit answers.",
+      next: "Next time I'll prefer hints, explanations, or tests over final answers.",
+      timeout: "Next time I'll scan for hint-style support instead of solution-style output.",
+      summary: "You practiced distinguishing hint-style support from final-answer requests."
+    },
+    {
+      id: "prompt-coach-not-replace",
+      success: "I checked whether the AI was coaching the learner rather than replacing the work.",
+      next: "Next time I'll ask whether the AI is coaching the learner rather than replacing the work.",
+      timeout: "Next time I'll look for the moment where AI starts replacing the learner's job.",
+      summary: "You reflected on the difference between AI as coach and AI as substitute."
+    }
+  ],
+  "Evidence Match": [
+    {
+      id: "evidence-match-tool",
+      success: "I matched the claim to the source or tool best suited to verify it.",
+      next: "Next time I'll match the claim to the source or tool best suited to verify it.",
+      timeout: "Next time I'll ask which verifier fits this claim before reading the options twice.",
+      summary: "You kept matching each claim to the best verifier instead of guessing."
+    },
+    {
+      id: "evidence-separate-policy",
+      success: "I separated technical verification questions from classroom-policy questions.",
+      next: "Next time I'll separate technical verification questions from classroom-policy questions.",
+      timeout: "Next time I'll quickly decide whether the claim is about code facts or class rules.",
+      summary: "You practiced separating technical questions from policy questions."
+    },
+    {
+      id: "evidence-pause-on-weakness",
+      success: "I treated weak evidence as a reason to pause instead of pushing ahead.",
+      next: "Next time I'll treat weak evidence as a reason to pause instead of pushing ahead.",
+      timeout: "Next time I'll pause sooner when the evidence behind a claim feels thin.",
+      summary: "You reflected on pausing when the evidence behind a claim felt weak."
+    }
+  ]
+};
+
 const questions = [
   {
     id: "hallucination-python-docs",
@@ -450,6 +563,7 @@ const state = {
   answered: false,
   players: [],
   responses: [],
+  currentReflectionId: null,
   timerId: null,
   timerTotalMs: 20000,
   timeRemainingMs: 20000
@@ -491,11 +605,17 @@ const feedbackCard = document.getElementById("feedback-card");
 const feedbackTitle = document.getElementById("feedback-title");
 const pointsChip = document.getElementById("points-chip");
 const feedbackBody = document.getElementById("feedback-body");
+const reflectionCard = document.getElementById("reflection-card");
+const reflectionTitle = document.getElementById("reflection-title");
+const reflectionCopy = document.getElementById("reflection-copy");
+const reflectionOptions = document.getElementById("reflection-options");
+const reflectionStatus = document.getElementById("reflection-status");
 const resultsCard = document.getElementById("results-card");
 const resultsRank = document.getElementById("results-rank");
 const resultsSummary = document.getElementById("results-summary");
 const resultsBreakdown = document.getElementById("results-breakdown");
 const resultsTakeaways = document.getElementById("results-takeaways");
+const resultsReflections = document.getElementById("results-reflections");
 const restartButton = document.getElementById("restart-button");
 
 function showView(viewName) {
@@ -734,6 +854,74 @@ function calculateEarnedPoints(question, isCorrect) {
   return Math.max(420, Math.round(700 + state.timeRemainingMs / 28 - question.difficulty * 140));
 }
 
+function getReflectionText(focus, outcomeKey) {
+  if (outcomeKey === "correct") {
+    return focus.success;
+  }
+
+  if (outcomeKey === "timeout") {
+    return focus.timeout;
+  }
+
+  return focus.next;
+}
+
+function renderReflection(question, outcomeKey) {
+  const prompt = reflectionPrompts[outcomeKey] || reflectionPrompts.incorrect;
+  const focuses = reflectionFocusByCategory[question.category] || [];
+  const response = state.responses[state.responses.length - 1];
+
+  reflectionTitle.textContent = prompt.title;
+  reflectionCopy.textContent = prompt.copy;
+  reflectionOptions.innerHTML = "";
+
+  focuses.forEach((focus) => {
+    const reflectionText = getReflectionText(focus, outcomeKey);
+    const button = document.createElement("button");
+
+    button.type = "button";
+    button.className = "reflection-choice";
+    button.textContent = reflectionText;
+
+    if (response?.reflectionId === focus.id) {
+      button.classList.add("selected");
+    }
+
+    button.addEventListener("click", () => {
+      const activeResponse = state.responses[state.responses.length - 1];
+
+      if (!activeResponse) {
+        return;
+      }
+
+      state.currentReflectionId = focus.id;
+      activeResponse.reflectionId = focus.id;
+      activeResponse.reflectionLabel = reflectionText;
+      activeResponse.reflectionSummary = focus.summary;
+
+      reflectionStatus.textContent = `Reflection saved: ${reflectionText}`;
+      reflectionStatus.classList.remove("hidden");
+      nextButton.disabled = false;
+      updateStatus("Reflection saved. Continue when you're ready for the next round.");
+      renderReflection(question, outcomeKey);
+    });
+
+    reflectionOptions.appendChild(button);
+  });
+
+  reflectionCard.classList.remove("hidden");
+
+  if (response?.reflectionId) {
+    reflectionStatus.textContent = `Reflection saved: ${response.reflectionLabel}`;
+    reflectionStatus.classList.remove("hidden");
+    nextButton.disabled = false;
+  } else {
+    reflectionStatus.textContent = "";
+    reflectionStatus.classList.add("hidden");
+    nextButton.disabled = focuses.length > 0;
+  }
+}
+
 function renderQuestion() {
   const question = getCurrentQuestion();
   const scaffolding = scaffoldingByCategory[question.category];
@@ -773,9 +961,14 @@ function renderQuestion() {
 
   state.selectedAnswerId = null;
   state.answered = false;
+  state.currentReflectionId = null;
   renderChoices();
 
   feedbackCard.classList.add("hidden");
+  reflectionCard.classList.add("hidden");
+  reflectionOptions.innerHTML = "";
+  reflectionStatus.textContent = "";
+  reflectionStatus.classList.add("hidden");
   nextButton.classList.add("hidden");
   resultsCard.classList.add("hidden");
   submitButton.textContent = "Lock in answer";
@@ -814,7 +1007,10 @@ function finalizeAnswer(selectedAnswerId, timedOut = false) {
   state.responses.push({
     id: question.id,
     category: question.category,
-    correct: isCorrect
+    correct: isCorrect,
+    reflectionId: null,
+    reflectionLabel: "",
+    reflectionSummary: ""
   });
 
   if (timedOut) {
@@ -836,10 +1032,13 @@ function finalizeAnswer(selectedAnswerId, timedOut = false) {
     `Correct answer: ${correctChoice.text} ${question.explanation} ${question.takeaway}`;
   feedbackCard.classList.remove("hidden");
 
+  const outcomeKey = timedOut ? "timeout" : isCorrect ? "correct" : "incorrect";
   nextButton.textContent =
     state.currentQuestionIndex === questions.length - 1 ? "See final leaderboard" : "Next question";
   nextButton.classList.remove("hidden");
+  nextButton.disabled = true;
   submitButton.disabled = true;
+  renderReflection(question, outcomeKey);
 }
 
 function buildBreakdown() {
@@ -904,6 +1103,39 @@ function buildTakeaways() {
   return takeaways;
 }
 
+function buildReflectionSummary() {
+  const completedReflections = state.responses.filter((response) => response.reflectionId).length;
+  const focusCounts = new Map();
+
+  state.responses.forEach((response) => {
+    if (!response.reflectionSummary) {
+      return;
+    }
+
+    focusCounts.set(
+      response.reflectionSummary,
+      (focusCounts.get(response.reflectionSummary) || 0) + 1
+    );
+  });
+
+  const summaryItems = [
+    `You completed ${completedReflections} quick reflections, building a habit of pausing after each round before moving on.`
+  ];
+
+  [...focusCounts.entries()]
+    .sort((left, right) => right[1] - left[1])
+    .slice(0, 2)
+    .forEach(([summary, count]) => {
+      summaryItems.push(`${summary} (${count} round${count === 1 ? "" : "s"}).`);
+    });
+
+  summaryItems.push(
+    "Carry that habit forward: when a future AI answer feels easy to trust, ask yourself what evidence or rule you would check first."
+  );
+
+  return summaryItems;
+}
+
 function showResults() {
   clearTimer();
   const yourRank = getRankOfCurrentPlayer();
@@ -928,6 +1160,13 @@ function showResults() {
     resultsTakeaways.appendChild(listItem);
   });
 
+  resultsReflections.innerHTML = "";
+  buildReflectionSummary().forEach((item) => {
+    const listItem = document.createElement("li");
+    listItem.textContent = item;
+    resultsReflections.appendChild(listItem);
+  });
+
   resultsCard.classList.remove("hidden");
   nextButton.classList.add("hidden");
   submitButton.disabled = true;
@@ -941,12 +1180,20 @@ function startMatch() {
   state.currentQuestionIndex = 0;
   state.players = clonePlayers();
   state.responses = [];
+  state.currentReflectionId = null;
 
   renderLeaderboard();
   renderQuestion();
 }
 
 function goToNextQuestion() {
+  const latestResponse = state.responses[state.responses.length - 1];
+
+  if (state.answered && latestResponse && !latestResponse.reflectionId) {
+    updateStatus("Choose one quick reflection before moving to the next round.");
+    return;
+  }
+
   if (state.currentQuestionIndex === questions.length - 1) {
     showResults();
     return;

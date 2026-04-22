@@ -75,6 +75,7 @@ button {
 .leaderboard-card,
 .question-card,
 .feedback-card,
+.reflection-card,
 .results-card,
 .meta-card,
 .framework-card,
@@ -105,6 +106,7 @@ button {
 .intro-card,
 .leaderboard-card,
 .question-card,
+.reflection-card,
 .results-card,
 .meta-card,
 .editor-card,
@@ -718,6 +720,61 @@ button {
   padding: 0 2px;
 }
 
+.reflection-card {
+  margin-top: 18px;
+  background: var(--yellow-tint);
+}
+
+#question-view .reflection-card {
+  border: 0;
+  border-radius: 0;
+  padding: 18px 0 0;
+  background: transparent;
+  border-top: var(--border-strong);
+}
+
+#question-view .reflection-card .panel-heading {
+  padding: 16px;
+  border-radius: var(--radius-md);
+  background: var(--yellow-tint);
+}
+
+.reflection-options {
+  display: grid;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.reflection-choice {
+  width: 100%;
+  padding: 16px 18px;
+  border: var(--border-strong);
+  background: rgba(255, 255, 255, 0.88);
+  text-align: left;
+  font-weight: 700;
+  line-height: 1.5;
+  cursor: pointer;
+  transition: transform 140ms ease, filter 140ms ease, background 140ms ease;
+}
+
+.reflection-choice:hover,
+.reflection-choice:focus-visible {
+  transform: translateY(-1px);
+  filter: brightness(1.02);
+}
+
+.reflection-choice.selected {
+  background: rgba(255, 216, 61, 0.48);
+  outline: 4px solid var(--ink);
+  outline-offset: -4px;
+}
+
+.reflection-status {
+  margin: 14px 2px 0;
+  font-weight: 700;
+  color: var(--ink);
+}
+
 .points-chip {
   padding: 8px 12px;
   border: var(--border-strong);
@@ -781,6 +838,7 @@ button {
   .leaderboard-card,
   .question-card,
   .feedback-card,
+  .reflection-card,
   .results-card,
   .intro-card,
   .scaffold-card {

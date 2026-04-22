@@ -38,6 +38,7 @@
                 <li>Each round gives you one challenge about CS hallucinations, prompt surgery, evidence matching, or code verification.</li>
                 <li>Answer quickly to earn more points, but do not trade speed for careless guesses.</li>
                 <li>Hints are available when you need them, but they disappear once you build a 2-question streak.</li>
+                <li>After every round, log one quick reflection about the move that helped or the strategy you want to try next.</li>
                 <li>Use the classroom framework to separate helpful support from AI doing the work for you.</li>
                 <li>The leaderboard updates after every round so you can track who is ahead.</li>
               </ul>
@@ -79,7 +80,8 @@
                 <p class="section-kicker">Class Match</p>
                 <h2 id="match-title">Round 1 of 9</h2>
                 <p class="board-copy">
-                  One round at a time. Read the question, open the hint if you need it, and lock in your best answer.
+                  One round at a time. Read the question, open the hint if you need it, lock in your best answer, and
+                  take a quick reflection before moving on.
                 </p>
               </div>
             </div>
@@ -129,7 +131,6 @@
                 <div class="answer-grid" id="answer-grid"></div>
                 <div class="action-row">
                   <button class="primary-button" id="submit-button" type="submit" disabled>Lock in answer</button>
-                  <button class="secondary-button hidden" id="next-button" type="button">Next question</button>
                 </div>
               </form>
 
@@ -142,6 +143,21 @@
                   <div class="points-chip" id="points-chip">0 pts</div>
                 </div>
                 <p class="feedback-body" id="feedback-body"></p>
+              </section>
+
+              <section class="reflection-card hidden" id="reflection-card" aria-live="polite">
+                <div class="panel-heading">
+                  <div>
+                    <p class="meta-label">Quick Reflection</p>
+                    <h3 id="reflection-title">Pause before the next round</h3>
+                  </div>
+                  <p class="panel-copy" id="reflection-copy"></p>
+                </div>
+                <div class="reflection-options" id="reflection-options"></div>
+                <p class="reflection-status hidden" id="reflection-status"></p>
+                <div class="action-row">
+                  <button class="secondary-button hidden" id="next-button" type="button">Next question</button>
+                </div>
               </section>
             </article>
           </div>
@@ -220,6 +236,11 @@
             <section class="result-panel">
               <p class="meta-label">What this round reinforces</p>
               <ul class="results-list" id="results-takeaways"></ul>
+            </section>
+
+            <section class="result-panel">
+              <p class="meta-label">Reflection habits</p>
+              <ul class="results-list" id="results-reflections"></ul>
             </section>
           </section>
         </div>
