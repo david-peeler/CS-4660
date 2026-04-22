@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Arena | Classroom Challenge</title>
+  <meta
+    name="description"
+    content="A student-facing Kahoot-style classroom game about AI hallucinations, code verification, and when AI is allowed in class."
+  >
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Sora:wght@400;600;700;800&display=swap"
+    rel="stylesheet"
+  >
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="site-shell">
+    <main class="app-shell">
+      <section class="app-view active" id="intro-view" aria-labelledby="intro-title">
+        <div class="intro-page">
+          <div class="intro-main">
+            <header class="masthead">
+              <p class="eyebrow">Student-Facing AI Literacy Game</p>
+              <h1 id="intro-title">AI Arena: Beat the Bot, Read the Room</h1>
+              <p class="intro">
+                Race through a classroom challenge where you catch CS hallucinations, perform prompt surgery,
+                match claims to evidence, and verify AI-generated code before you trust it.
+              </p>
+            </header>
+
+            <section class="intro-card">
+              <p class="section-kicker">Rules</p>
+              <h2>How this match works</h2>
+              <ul class="results-list">
+                <li>Each round gives you one challenge about CS hallucinations, prompt surgery, evidence matching, or code verification.</li>
+                <li>Answer quickly to earn more points, but do not trade speed for careless guesses.</li>
+                <li>Hints are available when you need them, but they disappear once you build a 2-question streak.</li>
+                <li>Use the classroom framework to separate helpful support from AI doing the work for you.</li>
+                <li>The leaderboard updates after every round so you can track who is ahead.</li>
+              </ul>
+            </section>
+
+            <section class="framework-board" aria-labelledby="framework-title">
+              <div class="section-heading">
+                <p class="section-kicker">Teacher Framework</p>
+                <h2 id="framework-title">Green light, yellow light, red light</h2>
+              </div>
+              <div class="framework-grid" id="framework-grid"></div>
+            </section>
+
+            <div class="action-row">
+              <button class="primary-button" id="intro-start-button" type="button">Begin round 1</button>
+            </div>
+          </div>
+
+          <aside class="lobby-sidebar">
+            <section class="leaderboard-card">
+              <div class="panel-heading">
+                <div>
+                  <p class="section-kicker">Players Joined</p>
+                  <h2>Lobby scoreboard</h2>
+                </div>
+                <p class="panel-copy">These are the students currently in the match before round 1 begins.</p>
+              </div>
+              <div class="leaderboard-list" id="lobby-leaderboard"></div>
+            </section>
+          </aside>
+        </div>
+      </section>
+
+      <section class="app-view" id="question-view" aria-live="polite">
+        <div class="question-page">
+          <div class="question-stage">
+            <div class="board-header">
+              <div>
+                <p class="section-kicker">Class Match</p>
+                <h2 id="match-title">Round 1 of 9</h2>
+                <p class="board-copy">
+                  One round at a time. Read the question, open the hint if you need it, and lock in your best answer.
+                </p>
+              </div>
+            </div>
+
+            <article class="question-card" id="question-card">
+              <div class="question-prompt-block">
+                <p class="question-label" id="question-label">Question 1</p>
+                <p class="question-copy" id="question-copy">
+                  Questions mix CS hallucination checks, prompt surgery, evidence matching, and code verification.
+                </p>
+              </div>
+
+              <section class="scenario-card" id="scenario-card">
+                <p class="meta-label" id="scenario-label">Round format</p>
+                <p class="scenario-text" id="scenario-text">
+                  Multiple-choice rounds will appear here. Code rounds will show the model output and the verification prompt in one page flow.
+                </p>
+              </section>
+
+              <section class="code-layout hidden" id="code-layout" aria-label="Code verification prompt">
+                <div class="editor-card">
+                  <p class="editor-label" id="code-label">LLM-generated code</p>
+                  <pre id="code-view" class="code-view"></pre>
+                </div>
+
+                <div class="prompt-card">
+                  <p class="meta-label">Verification Prompt</p>
+                  <h4 id="code-question-title"></h4>
+                  <p class="prompt-claim" id="code-claim"></p>
+                </div>
+              </section>
+
+              <details class="hint-panel" id="hint-panel">
+                <summary class="hint-summary">
+                  <div>
+                    <p class="section-kicker">Hint</p>
+                    <h4 id="hint-title">Open a hint for this round</h4>
+                  </div>
+                  <span class="hint-summary-copy">Open if you need it</span>
+                </summary>
+                <div class="hint-content">
+                  <ul class="results-list" id="hint-list"></ul>
+                </div>
+              </details>
+
+              <form class="answer-panel" id="answer-form" novalidate>
+                <div class="answer-grid" id="answer-grid"></div>
+                <div class="action-row">
+                  <button class="primary-button" id="submit-button" type="submit" disabled>Lock in answer</button>
+                  <button class="secondary-button hidden" id="next-button" type="button">Next question</button>
+                </div>
+              </form>
+
+              <section class="feedback-card hidden" id="feedback-card" aria-live="polite">
+                <div class="feedback-header">
+                  <div>
+                    <p class="meta-label">Round Result</p>
+                    <h3 id="feedback-title"></h3>
+                  </div>
+                  <div class="points-chip" id="points-chip">0 pts</div>
+                </div>
+                <p class="feedback-body" id="feedback-body"></p>
+              </section>
+            </article>
+          </div>
+
+          <aside class="question-sidebar">
+            <section class="match-meta" aria-label="Match status">
+              <div class="meta-card">
+                <p class="meta-label">Timer</p>
+                <div class="timer-row">
+                  <strong id="timer-text">20s</strong>
+                  <span id="question-count">Question 0 / 9</span>
+                </div>
+                <div class="timer-track" aria-hidden="true">
+                  <div class="timer-fill" id="timer-fill"></div>
+                </div>
+              </div>
+
+              <div class="meta-card">
+                <p class="meta-label">Your standing</p>
+                <div class="standing-row">
+                  <strong id="rank-text">#4</strong>
+                  <span id="streak-text">Streak: 0</span>
+                </div>
+                <p class="status-copy" id="status-text">
+                  Press start to jump into the first question.
+                </p>
+              </div>
+            </section>
+
+            <section class="leaderboard-card" aria-labelledby="leaderboard-title">
+              <div class="panel-heading">
+                <div>
+                  <p class="section-kicker">Live Scores</p>
+                  <h3 id="leaderboard-title">Leaderboard</h3>
+                </div>
+                <p class="panel-copy">The scoreboard follows you through every round.</p>
+              </div>
+              <div class="leaderboard-list" id="leaderboard"></div>
+            </section>
+
+            <section class="framework-board">
+              <div class="section-heading">
+                <p class="section-kicker">Quick Reminder</p>
+                <h3>Use the framework</h3>
+              </div>
+              <div class="framework-grid" id="sidebar-framework-grid"></div>
+            </section>
+          </aside>
+        </div>
+      </section>
+
+      <section class="app-view" id="results-view">
+        <div class="results-page">
+          <section class="results-card hidden" id="results-card" aria-labelledby="results-title">
+            <div class="panel-heading">
+              <div>
+                <p class="section-kicker">Final Scores</p>
+                <h3 id="results-title">Match complete</h3>
+              </div>
+              <button class="secondary-button" id="restart-button" type="button">Play again</button>
+            </div>
+
+            <div class="results-grid">
+              <section class="result-panel">
+                <p class="meta-label">Your finish</p>
+                <h4 id="results-rank">#1</h4>
+                <p id="results-summary"></p>
+              </section>
+
+              <section class="result-panel">
+                <p class="meta-label">Category check</p>
+                <ul class="results-list" id="results-breakdown"></ul>
+              </section>
+            </div>
+
+            <section class="result-panel">
+              <p class="meta-label">What this round reinforces</p>
+              <ul class="results-list" id="results-takeaways"></ul>
+            </section>
+          </section>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
