@@ -69,18 +69,15 @@ const scaffoldingByCategory = {
 const reflectionPrompts = {
   correct: {
     title: "What helped you on this round?",
-    copy:
-      "Pick the move that best matches how you made this decision so you can notice what strong reasoning looked like."
+    copy: "Choose the move that helped."
   },
   incorrect: {
     title: "What will you try next time?",
-    copy:
-      "Choose the strategy you want to use on the next round so a miss turns into a concrete adjustment."
+    copy: "Choose one adjustment for the next round."
   },
   timeout: {
     title: "What would help next time?",
-    copy:
-      "Pick the move that would help you decide a little faster and a little more confidently on the next round."
+    copy: "Choose one move that would help you decide faster."
   }
 };
 
@@ -88,92 +85,92 @@ const reflectionFocusByCategory = {
   "CS Hallucinations": [
     {
       id: "hallucination-docs-tools",
-      success: "I trusted docs and tools more than the chatbot's confident tone.",
-      next: "Next time I'll check docs and tools before trusting the claim.",
-      timeout: "Next time I'll go straight to docs or tools when a claim sounds polished.",
+      success: "Used docs and tools first",
+      next: "Check docs and tools first",
+      timeout: "Go to docs and tools first",
       summary: "You kept returning to docs and tools as your first reality check."
     },
     {
       id: "hallucination-source-check",
-      success: "I checked whether the method, citation, or source could actually be verified.",
-      next: "Next time I'll question missing or broken sources earlier.",
-      timeout: "Next time I'll scan for missing sources before I overthink the wording.",
+      success: "Checked the source",
+      next: "Question missing sources sooner",
+      timeout: "Scan for missing sources sooner",
       summary: "You practiced checking whether a cited method or source was real."
     },
     {
       id: "hallucination-slow-down",
-      success: "I slowed down when the answer sounded believable but unsupported.",
-      next: "Next time I'll pause when an answer sounds polished without evidence.",
-      timeout: "Next time I'll slow down just long enough to question confident wording.",
+      success: "Paused on confident wording",
+      next: "Pause on confident wording",
+      timeout: "Slow down on polished claims",
       summary: "You reflected on slowing down when confident claims lacked evidence."
     }
   ],
   "Code Verification": [
     {
       id: "code-known-tests",
-      success: "I imagined a quick known-answer test before trusting the code.",
-      next: "Next time I'll test the code with a known answer before I trust it.",
-      timeout: "Next time I'll jump to a quick test case instead of rereading the code.",
+      success: "Tried a known-answer test",
+      next: "Test with a known answer",
+      timeout: "Jump to a quick test case",
       summary: "You kept using quick known-answer tests as your first verification move."
     },
     {
       id: "code-edge-cases",
-      success: "I looked for edge cases, boundaries, or hidden assumptions.",
-      next: "Next time I'll look for edge cases, boundaries, or hidden assumptions first.",
-      timeout: "Next time I'll scan for boundary conditions before the timer starts to squeeze me.",
+      success: "Looked for edge cases",
+      next: "Look for edge cases first",
+      timeout: "Scan boundary cases first",
       summary: "You often reflected on edge cases and boundary conditions."
     },
     {
       id: "code-behavior-over-style",
-      success: "I focused on whether the code's behavior matched the claim, not whether it looked clean.",
-      next: "Next time I'll focus on behavior instead of trusting clean-looking code.",
-      timeout: "Next time I'll ask what behavior would prove or disprove the claim fastest.",
+      success: "Checked behavior, not style",
+      next: "Focus on behavior, not style",
+      timeout: "Ask what would prove the claim",
       summary: "You practiced checking code behavior instead of relying on surface polish."
     }
   ],
   "Prompt Surgery": [
     {
       id: "prompt-student-thinking",
-      success: "I asked whether the prompt kept the student's own thinking in charge.",
-      next: "Next time I'll ask whether the prompt keeps the student's own thinking in charge.",
-      timeout: "Next time I'll quickly check who is doing the thinking: the student or the AI.",
+      success: "Kept student thinking central",
+      next: "Keep student thinking central",
+      timeout: "Check who is doing the thinking",
       summary: "You kept returning to whether the student's own thinking stayed central."
     },
     {
       id: "prompt-hints-not-answers",
-      success: "I looked for hints, explanations, or tests instead of ready-to-submit answers.",
-      next: "Next time I'll prefer hints, explanations, or tests over final answers.",
-      timeout: "Next time I'll scan for hint-style support instead of solution-style output.",
+      success: "Chose hints over answers",
+      next: "Prefer hints over answers",
+      timeout: "Scan for hint-style support",
       summary: "You practiced distinguishing hint-style support from final-answer requests."
     },
     {
       id: "prompt-coach-not-replace",
-      success: "I checked whether the AI was coaching the learner rather than replacing the work.",
-      next: "Next time I'll ask whether the AI is coaching the learner rather than replacing the work.",
-      timeout: "Next time I'll look for the moment where AI starts replacing the learner's job.",
+      success: "Used AI as a coach",
+      next: "Ask if AI is replacing the work",
+      timeout: "Look for where AI takes over",
       summary: "You reflected on the difference between AI as coach and AI as substitute."
     }
   ],
   "Evidence Match": [
     {
       id: "evidence-match-tool",
-      success: "I matched the claim to the source or tool best suited to verify it.",
-      next: "Next time I'll match the claim to the source or tool best suited to verify it.",
-      timeout: "Next time I'll ask which verifier fits this claim before reading the options twice.",
+      success: "Matched the right verifier",
+      next: "Match the right verifier",
+      timeout: "Ask which verifier fits first",
       summary: "You kept matching each claim to the best verifier instead of guessing."
     },
     {
       id: "evidence-separate-policy",
-      success: "I separated technical verification questions from classroom-policy questions.",
-      next: "Next time I'll separate technical verification questions from classroom-policy questions.",
-      timeout: "Next time I'll quickly decide whether the claim is about code facts or class rules.",
+      success: "Separated tech from policy",
+      next: "Separate tech from policy",
+      timeout: "Decide whether it is rules or code",
       summary: "You practiced separating technical questions from policy questions."
     },
     {
       id: "evidence-pause-on-weakness",
-      success: "I treated weak evidence as a reason to pause instead of pushing ahead.",
-      next: "Next time I'll treat weak evidence as a reason to pause instead of pushing ahead.",
-      timeout: "Next time I'll pause sooner when the evidence behind a claim feels thin.",
+      success: "Paused on weak evidence",
+      next: "Pause on weak evidence",
+      timeout: "Pause sooner when evidence feels thin",
       summary: "You reflected on pausing when the evidence behind a claim felt weak."
     }
   ]
@@ -601,6 +598,7 @@ const answerForm = document.getElementById("answer-form");
 const answerGrid = document.getElementById("answer-grid");
 const submitButton = document.getElementById("submit-button");
 const nextButton = document.getElementById("next-button");
+const postRoundPanels = document.getElementById("post-round-panels");
 const feedbackCard = document.getElementById("feedback-card");
 const feedbackTitle = document.getElementById("feedback-title");
 const pointsChip = document.getElementById("points-chip");
@@ -899,10 +897,10 @@ function renderReflection(question, outcomeKey) {
       activeResponse.reflectionLabel = reflectionText;
       activeResponse.reflectionSummary = focus.summary;
 
-      reflectionStatus.textContent = `Reflection saved: ${reflectionText}`;
+      reflectionStatus.textContent = `Saved: ${reflectionText}`;
       reflectionStatus.classList.remove("hidden");
       nextButton.disabled = false;
-      updateStatus("Reflection saved. Continue when you're ready for the next round.");
+      updateStatus("Reflection saved. Continue to the next round when you're ready.");
       renderReflection(question, outcomeKey);
     });
 
@@ -912,7 +910,7 @@ function renderReflection(question, outcomeKey) {
   reflectionCard.classList.remove("hidden");
 
   if (response?.reflectionId) {
-    reflectionStatus.textContent = `Reflection saved: ${response.reflectionLabel}`;
+    reflectionStatus.textContent = `Saved: ${response.reflectionLabel}`;
     reflectionStatus.classList.remove("hidden");
     nextButton.disabled = false;
   } else {
@@ -964,6 +962,7 @@ function renderQuestion() {
   state.currentReflectionId = null;
   renderChoices();
 
+  postRoundPanels.classList.add("hidden");
   feedbackCard.classList.add("hidden");
   reflectionCard.classList.add("hidden");
   reflectionOptions.innerHTML = "";
@@ -1029,7 +1028,8 @@ function finalizeAnswer(selectedAnswerId, timedOut = false) {
 
   const correctChoice = question.choices.find((choice) => choice.id === question.correct);
   feedbackBody.textContent =
-    `Correct answer: ${correctChoice.text} ${question.explanation} ${question.takeaway}`;
+    `Correct: ${correctChoice.text}. ${question.explanation} ${question.takeaway}`;
+  postRoundPanels.classList.remove("hidden");
   feedbackCard.classList.remove("hidden");
 
   const outcomeKey = timedOut ? "timeout" : isCorrect ? "correct" : "incorrect";

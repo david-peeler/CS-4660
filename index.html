@@ -80,8 +80,7 @@
                 <p class="section-kicker">Class Match</p>
                 <h2 id="match-title">Round 1 of 9</h2>
                 <p class="board-copy">
-                  One round at a time. Read the question, open the hint if you need it, lock in your best answer, and
-                  take a quick reflection before moving on.
+                  Read the prompt, lock in your answer, check the feedback, and pick one quick reflection before moving on.
                 </p>
               </div>
             </div>
@@ -134,31 +133,33 @@
                 </div>
               </form>
 
-              <section class="feedback-card hidden" id="feedback-card" aria-live="polite">
-                <div class="feedback-header">
-                  <div>
-                    <p class="meta-label">Round Result</p>
-                    <h3 id="feedback-title"></h3>
+              <div class="post-round-panels hidden" id="post-round-panels">
+                <section class="feedback-card hidden" id="feedback-card" aria-live="polite">
+                  <div class="feedback-header">
+                    <div>
+                      <p class="meta-label">Round Result</p>
+                      <h3 id="feedback-title"></h3>
+                    </div>
+                    <div class="points-chip" id="points-chip">0 pts</div>
                   </div>
-                  <div class="points-chip" id="points-chip">0 pts</div>
-                </div>
-                <p class="feedback-body" id="feedback-body"></p>
-              </section>
+                  <p class="feedback-body" id="feedback-body"></p>
+                </section>
 
-              <section class="reflection-card hidden" id="reflection-card" aria-live="polite">
-                <div class="panel-heading">
-                  <div>
-                    <p class="meta-label">Quick Reflection</p>
-                    <h3 id="reflection-title">Pause before the next round</h3>
+                <section class="reflection-card hidden" id="reflection-card" aria-live="polite">
+                  <div class="panel-heading">
+                    <div>
+                      <p class="meta-label">Quick Reflection</p>
+                      <h3 id="reflection-title">Pick your next move</h3>
+                    </div>
+                    <p class="panel-copy" id="reflection-copy"></p>
                   </div>
-                  <p class="panel-copy" id="reflection-copy"></p>
-                </div>
-                <div class="reflection-options" id="reflection-options"></div>
-                <p class="reflection-status hidden" id="reflection-status"></p>
-                <div class="action-row">
-                  <button class="secondary-button hidden" id="next-button" type="button">Next question</button>
-                </div>
-              </section>
+                  <div class="reflection-options" id="reflection-options"></div>
+                  <p class="reflection-status hidden" id="reflection-status"></p>
+                  <div class="action-row">
+                    <button class="secondary-button hidden" id="next-button" type="button">Next question</button>
+                  </div>
+                </section>
+              </div>
             </article>
           </div>
 
