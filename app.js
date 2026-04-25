@@ -22,14 +22,7 @@ const frameworkLanes = [
   }
 ];
 
-const playersTemplate = [
-  { id: "you", name: "You", note: "Student player", skill: 0.72, score: 0, streak: 0 },
-  { id: "maya", name: "Maya", note: "Fast verifier", skill: 0.68, score: 0, streak: 0 },
-  { id: "leo", name: "Leo", note: "Code checker", skill: 0.74, score: 0, streak: 0 },
-  { id: "sana", name: "Sana", note: "Policy reader", skill: 0.7, score: 0, streak: 0 }
-];
-
-const ROUND_TIME_MULTIPLIER = 3;
+const CASE_TIME_MULTIPLIER = 3;
 
 const scaffoldingByCategory = {
   "CS Hallucinations": {
@@ -68,110 +61,74 @@ const scaffoldingByCategory = {
 
 const reflectionPrompts = {
   correct: {
-    title: "What helped you on this round?",
-    copy: "Choose the move that helped."
+    title: "Lock in the lesson",
+    copy: "Pick the lesson you want to carry forward. Choosing one will move you to the next case."
   },
   incorrect: {
-    title: "What will you try next time?",
-    copy: "Choose one adjustment for the next round."
+    title: "Reset the lesson",
+    copy: "Use the explanation to choose the lesson you want to use next time. Choosing one will move you on."
   },
   timeout: {
-    title: "What would help next time?",
-    copy: "Choose one move that would help you decide faster."
+    title: "Recover the lesson",
+    copy: "Choose the lesson that would help you decide faster next time. Choosing one will move you on."
   }
 };
 
-const reflectionFocusByCategory = {
+const reflectionChoicesByCategory = {
   "CS Hallucinations": [
     {
-      id: "hallucination-docs-tools",
-      success: "Used docs and tools first",
-      next: "Check docs and tools first",
-      timeout: "Go to docs and tools first",
-      summary: "You kept returning to docs and tools as your first reality check."
+      id: "hallucination-docs-first",
+      label: "If docs and tools cannot confirm it, I should not trust the feature yet."
     },
     {
       id: "hallucination-source-check",
-      success: "Checked the source",
-      next: "Question missing sources sooner",
-      timeout: "Scan for missing sources sooner",
-      summary: "You practiced checking whether a cited method or source was real."
+      label: "If the source cannot be verified, I should test or verify the advice before using it."
     },
     {
       id: "hallucination-slow-down",
-      success: "Paused on confident wording",
-      next: "Pause on confident wording",
-      timeout: "Slow down on polished claims",
-      summary: "You reflected on slowing down when confident claims lacked evidence."
+      label: "If the answer sounds polished, I should slow down and look for evidence."
     }
   ],
   "Code Verification": [
     {
       id: "code-known-tests",
-      success: "Tried a known-answer test",
-      next: "Test with a known answer",
-      timeout: "Jump to a quick test case",
-      summary: "You kept using quick known-answer tests as your first verification move."
+      label: "Run a quick known-answer test before trusting a strong code claim."
     },
     {
       id: "code-edge-cases",
-      success: "Looked for edge cases",
-      next: "Look for edge cases first",
-      timeout: "Scan boundary cases first",
-      summary: "You often reflected on edge cases and boundary conditions."
+      label: "Use edge cases first when the model says code always works."
     },
     {
       id: "code-behavior-over-style",
-      success: "Checked behavior, not style",
-      next: "Focus on behavior, not style",
-      timeout: "Ask what would prove the claim",
-      summary: "You practiced checking code behavior instead of relying on surface polish."
+      label: "Judge the code by behavior, not by how clean it looks."
     }
   ],
   "Prompt Surgery": [
     {
       id: "prompt-student-thinking",
-      success: "Kept student thinking central",
-      next: "Keep student thinking central",
-      timeout: "Check who is doing the thinking",
-      summary: "You kept returning to whether the student's own thinking stayed central."
+      label: "Keep the student's own thinking in the loop when using AI."
     },
     {
       id: "prompt-hints-not-answers",
-      success: "Chose hints over answers",
-      next: "Prefer hints over answers",
-      timeout: "Scan for hint-style support",
-      summary: "You practiced distinguishing hint-style support from final-answer requests."
+      label: "Ask AI for hints, tests, or feedback instead of finished work."
     },
     {
       id: "prompt-coach-not-replace",
-      success: "Used AI as a coach",
-      next: "Ask if AI is replacing the work",
-      timeout: "Look for where AI takes over",
-      summary: "You reflected on the difference between AI as coach and AI as substitute."
+      label: "Stop when AI starts replacing the graded work instead of supporting it."
     }
   ],
   "Evidence Match": [
     {
-      id: "evidence-match-tool",
-      success: "Matched the right verifier",
-      next: "Match the right verifier",
-      timeout: "Ask which verifier fits first",
-      summary: "You kept matching each claim to the best verifier instead of guessing."
+      id: "evidence-match-docs",
+      label: "Match fact claims to docs instead of guessing."
     },
     {
-      id: "evidence-separate-policy",
-      success: "Separated tech from policy",
-      next: "Separate tech from policy",
-      timeout: "Decide whether it is rules or code",
-      summary: "You practiced separating technical questions from policy questions."
+      id: "evidence-match-tools",
+      label: "Match behavior claims to live tools or tests."
     },
     {
-      id: "evidence-pause-on-weakness",
-      success: "Paused on weak evidence",
-      next: "Pause on weak evidence",
-      timeout: "Pause sooner when evidence feels thin",
-      summary: "You reflected on pausing when the evidence behind a claim felt weak."
+      id: "evidence-dont-trust-yet",
+      label: "If the evidence is thin, do not trust the claim yet."
     }
   ]
 };
@@ -183,9 +140,14 @@ const questions = [
     typeLabel: "Hallucination Check",
     title: "The Python method may be invented",
     prompt: "What is the strongest sign that the chatbot may be hallucinating about this Python feature?",
-    scenarioLabel: "Model response",
-    scenario:
-      "A chatbot says Python lists have a built-in method called sort_copy() and claims it was added recently, but you cannot find it in the official Python documentation.",
+    chatPromptLabel: "Prompt",
+    chatPrompt:
+      "How can I sort a Python list without mutating the original list? Show me the method and a short example.",
+    chatOutputLabel: "Model output",
+    chatOutput: `# Use the new built-in list method sort_copy().
+numbers = [3, 1, 2]
+sorted_numbers = numbers.sort_copy()
+print(sorted_numbers)`,
     choices: [
       { id: "a", text: "The explanation sounded very confident." },
       { id: "b", text: "The method does not appear in the official docs." },
@@ -283,9 +245,14 @@ const questions = [
     typeLabel: "Hallucination Check",
     title: "The Stack Overflow thread may not exist",
     prompt: "What is the safest next move before you rely on this debugging advice?",
-    scenarioLabel: "Model response",
-    scenario:
-      "A chatbot says a Stack Overflow thread solved the same Java bug, but the link it gives goes nowhere and a search does not show the post.",
+    chatPromptLabel: "Prompt",
+    chatPrompt:
+      "I keep hitting a Java config-loading bug. Has anyone already solved this, and what code should I try first?",
+    chatOutputLabel: "Model output",
+    chatOutput: `// Based on the Stack Overflow thread "Fixing NullPointerException in ConfigLoader.parseConfig"
+Config config = ConfigLoader.loadOrCreate(file);
+config.parseConfig();
+System.out.println(config.getTimeout());`,
     choices: [
       { id: "a", text: "Use the advice anyway because the explanation sounds technical." },
       { id: "b", text: "Verify the idea using trusted docs, your code, and your own tests before using it." },
@@ -410,9 +377,13 @@ const questions = [
     typeLabel: "Hallucination Check",
     title: "The JavaScript API method looks real, but isn't",
     prompt: "What should make you most skeptical here?",
-    scenarioLabel: "Model response",
-    scenario:
-      "A chatbot says the Fetch API includes a built-in method called response.toJSONSync(), but your editor and MDN do not show it.",
+    chatPromptLabel: "Prompt",
+    chatPrompt:
+      "How can I turn a fetch response into JSON right away? Show me the cleanest built-in method.",
+    chatOutputLabel: "Model output",
+    chatOutput: `const response = await fetch("/api/user");
+const user = response.toJSONSync();
+console.log(user.name);`,
     choices: [
       { id: "a", text: "The method is missing from trusted docs and tools." },
       { id: "b", text: "The method name sounds technical and specific." },
@@ -510,9 +481,14 @@ const questions = [
     typeLabel: "Hallucination Check",
     title: "The CSS property may be fake",
     prompt: "What is the best verification move here?",
-    scenarioLabel: "Model response",
-    scenario:
-      "A chatbot tells you to use a CSS property called layout-flow: stack; to fix a webpage, but the browser dev tools do not recognize it.",
+    chatPromptLabel: "Prompt",
+    chatPrompt:
+      "What is the quickest CSS fix to stack these cards vertically? Show me the property I should add.",
+    chatOutputLabel: "Model output",
+    chatOutput: `.card-list {
+  display: flex;
+  layout-flow: stack;
+}`,
     choices: [
       { id: "a", text: "Trust it because it sounds like a real CSS feature." },
       { id: "b", text: "Check MDN or other official docs before using it." },
@@ -558,29 +534,30 @@ const state = {
   currentQuestionIndex: -1,
   selectedAnswerId: null,
   answered: false,
-  players: [],
+  evidenceScore: 0,
+  correctStreak: 0,
+  strongestStreak: 0,
   responses: [],
-  currentReflectionId: null,
   timerId: null,
+  advanceTimerId: null,
   timerTotalMs: 20000,
   timeRemainingMs: 20000
 };
 
 const frameworkGrid = document.getElementById("framework-grid");
 const sidebarFrameworkGrid = document.getElementById("sidebar-framework-grid");
-const matchTitle = document.getElementById("match-title");
+const caseTitle = document.getElementById("case-title");
 const introStartButton = document.getElementById("intro-start-button");
-const lobbyLeaderboard = document.getElementById("lobby-leaderboard");
 const timerText = document.getElementById("timer-text");
 const timerFill = document.getElementById("timer-fill");
 const questionCount = document.getElementById("question-count");
 const rankText = document.getElementById("rank-text");
 const streakText = document.getElementById("streak-text");
 const statusText = document.getElementById("status-text");
-const leaderboard = document.getElementById("leaderboard");
 const introView = document.getElementById("intro-view");
 const questionView = document.getElementById("question-view");
 const resultsView = document.getElementById("results-view");
+const questionPage = document.getElementById("question-page");
 const questionLabel = document.getElementById("question-label");
 const questionCopy = document.getElementById("question-copy");
 const hintPanel = document.getElementById("hint-panel");
@@ -589,6 +566,11 @@ const hintList = document.getElementById("hint-list");
 const scenarioLabel = document.getElementById("scenario-label");
 const scenarioText = document.getElementById("scenario-text");
 const scenarioCard = document.getElementById("scenario-card");
+const hallucinationLayout = document.getElementById("hallucination-layout");
+const hallucinationPromptLabel = document.getElementById("hallucination-prompt-label");
+const hallucinationPromptText = document.getElementById("hallucination-prompt-text");
+const hallucinationOutputLabel = document.getElementById("hallucination-output-label");
+const hallucinationOutputView = document.getElementById("hallucination-output-view");
 const codeLayout = document.getElementById("code-layout");
 const codeLabel = document.getElementById("code-label");
 const codeView = document.getElementById("code-view");
@@ -597,15 +579,15 @@ const codeClaim = document.getElementById("code-claim");
 const answerForm = document.getElementById("answer-form");
 const answerGrid = document.getElementById("answer-grid");
 const submitButton = document.getElementById("submit-button");
-const nextButton = document.getElementById("next-button");
-const postRoundPanels = document.getElementById("post-round-panels");
+const reflectionOverlay = document.getElementById("reflection-overlay");
 const feedbackCard = document.getElementById("feedback-card");
 const feedbackTitle = document.getElementById("feedback-title");
-const pointsChip = document.getElementById("points-chip");
+const evidenceChip = document.getElementById("evidence-chip");
 const feedbackBody = document.getElementById("feedback-body");
 const reflectionCard = document.getElementById("reflection-card");
 const reflectionTitle = document.getElementById("reflection-title");
 const reflectionCopy = document.getElementById("reflection-copy");
+const reflectionNote = document.getElementById("reflection-note");
 const reflectionOptions = document.getElementById("reflection-options");
 const reflectionStatus = document.getElementById("reflection-status");
 const resultsCard = document.getElementById("results-card");
@@ -659,84 +641,37 @@ function renderFramework(target) {
   });
 }
 
-function clonePlayers() {
-  return playersTemplate.map((player) => ({
-    ...player,
-    score: 0,
-    streak: 0
-  }));
-}
-
 function getCurrentQuestion() {
   return questions[state.currentQuestionIndex];
 }
 
-function sortPlayers() {
-  return [...state.players].sort((left, right) => {
-    if (right.score !== left.score) {
-      return right.score - left.score;
-    }
+function getJudgmentTrackerLabel(streak) {
+  if (streak >= 3) {
+    return "Locked in";
+  }
 
-    return right.streak - left.streak;
-  });
+  if (streak === 2) {
+    return "Steady";
+  }
+
+  if (streak === 1) {
+    return "Building";
+  }
+
+  return "Resetting";
 }
 
-function getPlayer(id) {
-  return state.players.find((player) => player.id === id);
-}
-
-function getRankOfCurrentPlayer() {
-  const sorted = sortPlayers();
-  const index = sorted.findIndex((player) => player.id === "you");
-  return index + 1;
+function resetProgress() {
+  state.evidenceScore = 0;
+  state.correctStreak = 0;
+  state.strongestStreak = 0;
+  state.responses = [];
 }
 
 function updateStatus(message) {
   statusText.textContent = message;
-  rankText.textContent = `#${getRankOfCurrentPlayer()}`;
-  streakText.textContent = `Streak: ${getPlayer("you").streak}`;
-}
-
-function renderPlayerList(target, options = {}) {
-  const { lobbyMode = false } = options;
-
-  target.innerHTML = "";
-  const sorted = sortPlayers();
-
-  sorted.forEach((player, index) => {
-    const row = document.createElement("div");
-    row.className = lobbyMode ? "leaderboard-row lobby-row" : "leaderboard-row";
-
-    if (player.id === "you") {
-      row.classList.add("current-player");
-    }
-
-    row.innerHTML = lobbyMode
-      ? `
-        <div class="leaderboard-rank">#${index + 1}</div>
-        <div>
-          <div class="player-name">${player.name}</div>
-          <div class="player-note">${player.note}</div>
-        </div>
-        <div class="player-score">${player.score} pts</div>
-      `
-      : `
-        <div class="leaderboard-rank">#${index + 1}</div>
-        <div>
-          <div class="player-name">${player.name}</div>
-          <div class="player-note">${player.note}</div>
-        </div>
-        <div class="player-score">${player.score} pts</div>
-        <div class="player-streak">${player.streak} streak</div>
-      `;
-
-    target.appendChild(row);
-  });
-}
-
-function renderLeaderboard() {
-  renderPlayerList(leaderboard);
-  renderPlayerList(lobbyLeaderboard, { lobbyMode: true });
+  rankText.textContent = `Evidence: ${state.evidenceScore}`;
+  streakText.textContent = `Judgment tracker: ${getJudgmentTrackerLabel(state.correctStreak)}`;
 }
 
 function buildChoiceButton(choice, index) {
@@ -800,6 +735,13 @@ function clearTimer() {
   }
 }
 
+function clearAdvanceTimer() {
+  if (state.advanceTimerId) {
+    window.clearTimeout(state.advanceTimerId);
+    state.advanceTimerId = null;
+  }
+}
+
 function updateTimerVisual() {
   const ratio = Math.max(0, state.timeRemainingMs / state.timerTotalMs);
   timerFill.style.width = `${ratio * 100}%`;
@@ -825,26 +767,7 @@ function startTimer(seconds) {
   }, 100);
 }
 
-function simulateOpponents(question) {
-  state.players.forEach((player) => {
-    if (player.id === "you") {
-      return;
-    }
-
-    const chance = Math.min(0.92, Math.max(0.18, player.skill - question.difficulty * 0.35 + 0.08));
-    const correct = Math.random() < chance;
-
-    if (correct) {
-      const earned = Math.round(520 + Math.random() * 420);
-      player.score += earned;
-      player.streak += 1;
-    } else {
-      player.streak = 0;
-    }
-  });
-}
-
-function calculateEarnedPoints(question, isCorrect) {
+function calculateEvidenceScore(question, isCorrect) {
   if (!isCorrect) {
     return 0;
   }
@@ -852,83 +775,101 @@ function calculateEarnedPoints(question, isCorrect) {
   return Math.max(420, Math.round(700 + state.timeRemainingMs / 28 - question.difficulty * 140));
 }
 
-function getReflectionText(focus, outcomeKey) {
-  if (outcomeKey === "correct") {
-    return focus.success;
-  }
+function showReflectionOverlay() {
+  questionPage.classList.add("is-reflecting");
+  reflectionOverlay.classList.remove("hidden");
+  reflectionOverlay.setAttribute("aria-hidden", "false");
+}
 
-  if (outcomeKey === "timeout") {
-    return focus.timeout;
-  }
+function hideReflectionOverlay() {
+  questionPage.classList.remove("is-reflecting");
+  reflectionOverlay.classList.add("hidden");
+  reflectionOverlay.setAttribute("aria-hidden", "true");
+  reflectionCard.classList.remove("is-advancing");
+}
 
-  return focus.next;
+function queueReflectionAdvance() {
+  clearAdvanceTimer();
+  state.advanceTimerId = window.setTimeout(() => {
+    state.advanceTimerId = null;
+    goToNextQuestion();
+  }, 220);
 }
 
 function renderReflection(question, outcomeKey) {
   const prompt = reflectionPrompts[outcomeKey] || reflectionPrompts.incorrect;
-  const focuses = reflectionFocusByCategory[question.category] || [];
+  const choices = reflectionChoicesByCategory[question.category] || [];
   const response = state.responses[state.responses.length - 1];
 
   reflectionTitle.textContent = prompt.title;
   reflectionCopy.textContent = prompt.copy;
+  reflectionNote.value = response?.reflectionNote || "";
   reflectionOptions.innerHTML = "";
+  reflectionStatus.textContent = "";
+  reflectionStatus.classList.add("hidden");
+  reflectionCard.classList.remove("is-advancing");
 
-  focuses.forEach((focus) => {
-    const reflectionText = getReflectionText(focus, outcomeKey);
+  choices.forEach((choice) => {
     const button = document.createElement("button");
 
     button.type = "button";
     button.className = "reflection-choice";
-    button.textContent = reflectionText;
+    button.textContent = choice.label;
 
-    if (response?.reflectionId === focus.id) {
+    if (response?.reflectionId === choice.id) {
       button.classList.add("selected");
     }
 
     button.addEventListener("click", () => {
       const activeResponse = state.responses[state.responses.length - 1];
 
-      if (!activeResponse) {
+      if (!activeResponse || reflectionCard.classList.contains("is-advancing")) {
         return;
       }
 
-      state.currentReflectionId = focus.id;
-      activeResponse.reflectionId = focus.id;
-      activeResponse.reflectionLabel = reflectionText;
-      activeResponse.reflectionSummary = focus.summary;
+      activeResponse.reflectionId = choice.id;
+      activeResponse.reflectionLabel = choice.label;
+      activeResponse.reflectionNote = reflectionNote.value.trim();
 
-      reflectionStatus.textContent = `Saved: ${reflectionText}`;
+      reflectionOptions.querySelectorAll(".reflection-choice").forEach((optionButton) => {
+        optionButton.disabled = true;
+        optionButton.classList.toggle("selected", optionButton === button);
+      });
+
+      reflectionNote.disabled = true;
+      reflectionCard.classList.add("is-advancing");
+      reflectionStatus.textContent =
+        state.currentQuestionIndex === questions.length - 1
+          ? "Saved. Opening your final review..."
+          : "Saved. Loading the next case...";
       reflectionStatus.classList.remove("hidden");
-      nextButton.disabled = false;
-      updateStatus("Reflection saved. Continue to the next round when you're ready.");
-      renderReflection(question, outcomeKey);
+      updateStatus(
+        state.currentQuestionIndex === questions.length - 1
+          ? "Reflection saved. Opening your final review."
+          : "Reflection saved. Loading the next case."
+      );
+      queueReflectionAdvance();
     });
 
     reflectionOptions.appendChild(button);
   });
 
+  reflectionNote.disabled = false;
   reflectionCard.classList.remove("hidden");
-
-  if (response?.reflectionId) {
-    reflectionStatus.textContent = `Saved: ${response.reflectionLabel}`;
-    reflectionStatus.classList.remove("hidden");
-    nextButton.disabled = false;
-  } else {
-    reflectionStatus.textContent = "";
-    reflectionStatus.classList.add("hidden");
-    nextButton.disabled = focuses.length > 0;
-  }
+  showReflectionOverlay();
 }
 
 function renderQuestion() {
   const question = getCurrentQuestion();
   const scaffolding = scaffoldingByCategory[question.category];
-  const player = getPlayer("you");
-  const hintHidden = player.streak >= 2;
+  const hintHidden = state.correctStreak >= 2;
+  const hasChatExchange = Boolean(question.chatPrompt && question.chatOutput);
 
-  matchTitle.textContent = `Round ${state.currentQuestionIndex + 1} of ${questions.length}`;
-  questionCount.textContent = `Question ${state.currentQuestionIndex + 1} / ${questions.length}`;
-  questionLabel.textContent = `Question ${state.currentQuestionIndex + 1}`;
+  clearAdvanceTimer();
+  hideReflectionOverlay();
+  caseTitle.textContent = `Case ${state.currentQuestionIndex + 1} of ${questions.length}`;
+  questionCount.textContent = `Case ${state.currentQuestionIndex + 1} / ${questions.length}`;
+  questionLabel.textContent = `Case ${state.currentQuestionIndex + 1}`;
   questionCopy.textContent = question.prompt;
   hintTitle.textContent = scaffolding.title;
   hintList.innerHTML = "";
@@ -941,9 +882,23 @@ function renderQuestion() {
   hintPanel.open = false;
   scenarioLabel.textContent = question.scenarioLabel || "Scenario";
   scenarioText.textContent = question.scenario || "";
+  hallucinationLayout.classList.toggle("hidden", !hasChatExchange);
 
-  if (question.code) {
+  if (hasChatExchange) {
     scenarioCard.classList.add("hidden");
+    codeLayout.classList.add("hidden");
+    hallucinationPromptLabel.textContent = question.chatPromptLabel || "Prompt";
+    hallucinationPromptText.textContent = question.chatPrompt;
+    hallucinationOutputLabel.textContent = question.chatOutputLabel || "Model output";
+    hallucinationOutputView.textContent = question.chatOutput;
+    codeView.textContent = "";
+    codeQuestionTitle.textContent = "";
+    codeClaim.textContent = "";
+  } else if (question.code) {
+    scenarioCard.classList.add("hidden");
+    hallucinationLayout.classList.add("hidden");
+    hallucinationPromptText.textContent = "";
+    hallucinationOutputView.textContent = "";
     codeLayout.classList.remove("hidden");
     codeLabel.textContent = question.codeLabel;
     codeView.textContent = question.code;
@@ -951,7 +906,10 @@ function renderQuestion() {
     codeClaim.textContent = question.codeClaim;
   } else {
     scenarioCard.classList.remove("hidden");
+    hallucinationLayout.classList.add("hidden");
     codeLayout.classList.add("hidden");
+    hallucinationPromptText.textContent = "";
+    hallucinationOutputView.textContent = "";
     codeView.textContent = "";
     codeQuestionTitle.textContent = "";
     codeClaim.textContent = "";
@@ -959,22 +917,21 @@ function renderQuestion() {
 
   state.selectedAnswerId = null;
   state.answered = false;
-  state.currentReflectionId = null;
   renderChoices();
 
-  postRoundPanels.classList.add("hidden");
   feedbackCard.classList.add("hidden");
   reflectionCard.classList.add("hidden");
   reflectionOptions.innerHTML = "";
+  reflectionNote.value = "";
+  reflectionNote.disabled = false;
   reflectionStatus.textContent = "";
   reflectionStatus.classList.add("hidden");
-  nextButton.classList.add("hidden");
   resultsCard.classList.add("hidden");
-  submitButton.textContent = "Lock in answer";
+  submitButton.textContent = "Submit decision";
 
-  updateStatus("Answer quickly and accurately to climb the leaderboard.");
-  navigateTo(`question-${state.currentQuestionIndex + 1}`);
-  startTimer(Math.round(question.timeLimit * ROUND_TIME_MULTIPLIER));
+  updateStatus("Work through the scenario and submit your strongest decision.");
+  navigateTo(`case-${state.currentQuestionIndex + 1}`);
+  startTimer(Math.round(question.timeLimit * CASE_TIME_MULTIPLIER));
 }
 
 function finalizeAnswer(selectedAnswerId, timedOut = false) {
@@ -986,22 +943,19 @@ function finalizeAnswer(selectedAnswerId, timedOut = false) {
   state.answered = true;
 
   const question = getCurrentQuestion();
-  const player = getPlayer("you");
   const isCorrect = selectedAnswerId === question.correct;
-  const earnedPoints = calculateEarnedPoints(question, isCorrect);
+  const earnedEvidence = calculateEvidenceScore(question, isCorrect);
 
   if (isCorrect) {
-    player.score += earnedPoints;
-    player.streak += 1;
+    state.evidenceScore += earnedEvidence;
+    state.correctStreak += 1;
+    state.strongestStreak = Math.max(state.strongestStreak, state.correctStreak);
   } else {
-    player.streak = 0;
+    state.correctStreak = 0;
   }
 
-  hintPanel.classList.toggle("hidden", player.streak >= 2);
-
-  simulateOpponents(question);
+  hintPanel.classList.toggle("hidden", state.correctStreak >= 2);
   renderChoices();
-  renderLeaderboard();
 
   state.responses.push({
     id: question.id,
@@ -1009,34 +963,29 @@ function finalizeAnswer(selectedAnswerId, timedOut = false) {
     correct: isCorrect,
     reflectionId: null,
     reflectionLabel: "",
-    reflectionSummary: ""
+    reflectionNote: ""
   });
 
   if (timedOut) {
-    feedbackTitle.textContent = "Time's up";
-    pointsChip.textContent = "0 pts";
-    updateStatus("The timer hit zero. Read the explanation and jump to the next round.");
+    feedbackTitle.textContent = "Review window closed";
+    evidenceChip.textContent = "Evidence +0";
+    updateStatus("The review window closed. Read the explanation and continue.");
   } else if (isCorrect) {
-    feedbackTitle.textContent = "Correct answer";
-    pointsChip.textContent = `+${earnedPoints} pts`;
-    updateStatus(`Nice work. You picked up ${earnedPoints} points and kept your streak alive.`);
+    feedbackTitle.textContent = "Strong decision";
+    evidenceChip.textContent = `Evidence +${earnedEvidence}`;
+    updateStatus(`Strong call. You added ${earnedEvidence} evidence.`);
   } else {
-    feedbackTitle.textContent = "Not this round";
-    pointsChip.textContent = "0 pts";
-    updateStatus("You missed this one. Use the explanation to sharpen the next decision.");
+    feedbackTitle.textContent = "Needs review";
+    evidenceChip.textContent = "Evidence +0";
+    updateStatus("Review the explanation and adjust your next decision.");
   }
 
   const correctChoice = question.choices.find((choice) => choice.id === question.correct);
   feedbackBody.textContent =
-    `Correct: ${correctChoice.text}. ${question.explanation} ${question.takeaway}`;
-  postRoundPanels.classList.remove("hidden");
+    `Strongest move: ${correctChoice.text}. ${question.explanation} ${question.takeaway}`;
   feedbackCard.classList.remove("hidden");
 
   const outcomeKey = timedOut ? "timeout" : isCorrect ? "correct" : "incorrect";
-  nextButton.textContent =
-    state.currentQuestionIndex === questions.length - 1 ? "See final leaderboard" : "Next question";
-  nextButton.classList.remove("hidden");
-  nextButton.disabled = true;
   submitButton.disabled = true;
   renderReflection(question, outcomeKey);
 }
@@ -1090,7 +1039,7 @@ function buildTakeaways() {
 
   if (evidenceCorrect < 2) {
     takeaways.push(
-      "Evidence-match rounds get easier when you pair the claim with the right verifier: docs for APIs, dev tools for browser behavior, tests for code behavior, policy for classroom rules."
+      "Evidence-matching gets easier when you pair each claim with the right verifier: docs for APIs, dev tools for browser behavior, tests for code behavior, policy for classroom rules."
     );
   }
 
@@ -1105,29 +1054,32 @@ function buildTakeaways() {
 
 function buildReflectionSummary() {
   const completedReflections = state.responses.filter((response) => response.reflectionId).length;
-  const focusCounts = new Map();
+  const reflectionCounts = new Map();
+  const noteCount = state.responses.filter((response) => response.reflectionNote).length;
 
   state.responses.forEach((response) => {
-    if (!response.reflectionSummary) {
-      return;
+    if (response.reflectionLabel) {
+      reflectionCounts.set(
+        response.reflectionLabel,
+        (reflectionCounts.get(response.reflectionLabel) || 0) + 1
+      );
     }
-
-    focusCounts.set(
-      response.reflectionSummary,
-      (focusCounts.get(response.reflectionSummary) || 0) + 1
-    );
   });
 
   const summaryItems = [
-    `You completed ${completedReflections} quick reflections, building a habit of pausing after each round before moving on.`
+    `You completed ${completedReflections} case reflections before moving on.`
   ];
 
-  [...focusCounts.entries()]
+  [...reflectionCounts.entries()]
     .sort((left, right) => right[1] - left[1])
-    .slice(0, 2)
-    .forEach(([summary, count]) => {
-      summaryItems.push(`${summary} (${count} round${count === 1 ? "" : "s"}).`);
+    .slice(0, 1)
+    .forEach(([label, count]) => {
+      summaryItems.push(`Lesson you chose most often: ${label} (${count} case${count === 1 ? "" : "s"}).`);
     });
+
+  if (noteCount > 0) {
+    summaryItems.push(`You left yourself ${noteCount} short note${noteCount === 1 ? "" : "s"} to carry into later cases.`);
+  }
 
   summaryItems.push(
     "Carry that habit forward: when a future AI answer feels easy to trust, ask yourself what evidence or rule you would check first."
@@ -1137,14 +1089,14 @@ function buildReflectionSummary() {
 }
 
 function showResults() {
+  clearAdvanceTimer();
   clearTimer();
-  const yourRank = getRankOfCurrentPlayer();
-  const yourPlayer = getPlayer("you");
+  hideReflectionOverlay();
   const correctCount = state.responses.filter((response) => response.correct).length;
 
-  resultsRank.textContent = `#${yourRank}`;
+  resultsRank.textContent = `Evidence score: ${state.evidenceScore}`;
   resultsSummary.textContent =
-    `You answered ${correctCount} of ${questions.length} questions correctly and finished with ${yourPlayer.score} points.`;
+    `You reviewed ${correctCount} of ${questions.length} cases accurately. Your evidence score finished at ${state.evidenceScore}, and your judgment tracker peaked at ${getJudgmentTrackerLabel(state.strongestStreak)}.`;
 
   resultsBreakdown.innerHTML = "";
   buildBreakdown().forEach((item) => {
@@ -1168,21 +1120,16 @@ function showResults() {
   });
 
   resultsCard.classList.remove("hidden");
-  nextButton.classList.add("hidden");
   submitButton.disabled = true;
-  submitButton.textContent = "Match complete";
-  updateStatus(`Match complete. You finished #${yourRank} with ${yourPlayer.score} points.`);
+  submitButton.textContent = "Case review complete";
+  updateStatus(`Case review complete. Evidence score ${state.evidenceScore}.`);
   navigateTo("results");
 }
 
-function startMatch() {
+function startReview() {
   state.started = true;
   state.currentQuestionIndex = 0;
-  state.players = clonePlayers();
-  state.responses = [];
-  state.currentReflectionId = null;
-
-  renderLeaderboard();
+  resetProgress();
   renderQuestion();
 }
 
@@ -1190,7 +1137,7 @@ function goToNextQuestion() {
   const latestResponse = state.responses[state.responses.length - 1];
 
   if (state.answered && latestResponse && !latestResponse.reflectionId) {
-    updateStatus("Choose one quick reflection before moving to the next round.");
+    updateStatus("Choose a reflection before moving to the next case.");
     return;
   }
 
@@ -1204,13 +1151,14 @@ function goToNextQuestion() {
 }
 
 function initializeView() {
+  clearAdvanceTimer();
+  hideReflectionOverlay();
   renderFramework(frameworkGrid);
   renderFramework(sidebarFrameworkGrid);
-  state.players = clonePlayers();
-  renderLeaderboard();
+  resetProgress();
   showView("intro");
-  updateStatus("Press start to jump into the first question.");
-  questionCount.textContent = `Question 0 / ${questions.length}`;
+  updateStatus("Open case 1 to begin.");
+  questionCount.textContent = `Case 0 / ${questions.length}`;
   timerFill.style.width = "100%";
   window.history.replaceState(null, "", "#intro");
 }
@@ -1225,18 +1173,16 @@ answerForm.addEventListener("submit", (event) => {
   finalizeAnswer(state.selectedAnswerId);
 });
 
-nextButton.addEventListener("click", () => {
-  goToNextQuestion();
-});
-
 restartButton.addEventListener("click", () => {
+  clearAdvanceTimer();
   clearTimer();
-  startMatch();
+  startReview();
 });
 
 introStartButton.addEventListener("click", () => {
+  clearAdvanceTimer();
   clearTimer();
-  startMatch();
+  startReview();
 });
 
 initializeView();
