@@ -37,6 +37,7 @@
               <ul class="results-list">
                 <li>Each case gives you one scenario about CS hallucinations, prompt surgery, evidence matching, or code verification.</li>
                 <li>Submit the strongest decision you can defend with evidence, not just the fastest guess.</li>
+                <li>Some cases ask you to inspect directly by clicking the exact line in code or model output that deserves scrutiny.</li>
                 <li>Hints are available when you need them, but they recede once your judgment tracker becomes steady.</li>
                 <li>After every case, log one quick reflection about the move that helped or the strategy you want to try next.</li>
                 <li>Use the classroom framework to separate helpful support from AI doing the work for you.</li>
@@ -83,7 +84,7 @@
               <section class="scenario-card" id="scenario-card">
                 <p class="meta-label" id="scenario-label">Scenario</p>
                 <p class="scenario-text" id="scenario-text">
-                  Multiple-choice cases will appear here. Code cases will show the model output and the verification prompt in one page flow.
+                  Some cases use answer buttons. Others ask you to click the exact line in code or model output that deserves a closer look.
                 </p>
               </section>
 
@@ -98,6 +99,7 @@
                 <div class="editor-card">
                   <p class="editor-label" id="hallucination-output-label">Model output</p>
                   <pre id="hallucination-output-view" class="code-view"></pre>
+                  <div class="inspect-view hidden" id="hallucination-output-inspector"></div>
                 </div>
               </section>
 
@@ -105,6 +107,7 @@
                 <div class="editor-card">
                   <p class="editor-label" id="code-label">LLM-generated code</p>
                   <pre id="code-view" class="code-view"></pre>
+                  <div class="inspect-view hidden" id="code-inspector"></div>
                 </div>
 
                 <div class="prompt-card">

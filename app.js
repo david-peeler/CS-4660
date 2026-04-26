@@ -139,7 +139,9 @@ const questions = [
     category: "CS Hallucinations",
     typeLabel: "Hallucination Check",
     title: "The Python method may be invented",
-    prompt: "What is the strongest sign that the chatbot may be hallucinating about this Python feature?",
+    prompt: "Tap the exact line in the model output that should trigger a docs check first.",
+    interactionType: "line-pick",
+    linePickSource: "chatOutput",
     chatPromptLabel: "Prompt",
     chatPrompt:
       "How can I sort a Python list without mutating the original list? Show me the method and a short example.",
@@ -148,13 +150,7 @@ const questions = [
 numbers = [3, 1, 2]
 sorted_numbers = numbers.sort_copy()
 print(sorted_numbers)`,
-    choices: [
-      { id: "a", text: "The explanation sounded very confident." },
-      { id: "b", text: "The method does not appear in the official docs." },
-      { id: "c", text: "The method name sounds useful for programmers." },
-      { id: "d", text: "The answer included example code." }
-    ],
-    correct: "b",
+    correct: "line-3",
     explanation:
       "Confidence is not proof. If an API or method name is missing from the official docs, that is a strong hallucination warning sign.",
     takeaway:
@@ -244,7 +240,9 @@ print(sorted_numbers)`,
     category: "CS Hallucinations",
     typeLabel: "Hallucination Check",
     title: "The Stack Overflow thread may not exist",
-    prompt: "What is the safest next move before you rely on this debugging advice?",
+    prompt: "Tap the exact line that should make you verify the source before trusting the advice.",
+    interactionType: "line-pick",
+    linePickSource: "chatOutput",
     chatPromptLabel: "Prompt",
     chatPrompt:
       "I keep hitting a Java config-loading bug. Has anyone already solved this, and what code should I try first?",
@@ -253,13 +251,7 @@ print(sorted_numbers)`,
 Config config = ConfigLoader.loadOrCreate(file);
 config.parseConfig();
 System.out.println(config.getTimeout());`,
-    choices: [
-      { id: "a", text: "Use the advice anyway because the explanation sounds technical." },
-      { id: "b", text: "Verify the idea using trusted docs, your code, and your own tests before using it." },
-      { id: "c", text: "Ask the chatbot to rewrite the same answer in fewer words." },
-      { id: "d", text: "Cite the chatbot instead of checking the source." }
-    ],
-    correct: "b",
+    correct: "line-1",
     explanation:
       "If a referenced thread cannot be found, you should not treat it as proof. In CS, verify the idea against trusted references or a real test.",
     takeaway:
@@ -319,27 +311,30 @@ System.out.println(config.getTimeout());`,
     category: "Code Verification",
     typeLabel: "Code Check",
     title: "Find the line that deserves skepticism",
-    prompt: "Which part of the code should you question first?",
+    prompt: "Tap the exact line you would inspect first.",
+    interactionType: "line-pick",
+    linePickSource: "code",
     codeLabel: "LLM-generated JavaScript",
     codeQuestionTitle: "The model says this function always returns the class average.",
     codeClaim:
       "Before you trust the claim, identify the line that is most likely to create a wrong result or runtime issue.",
     code: `function average(scores) {
   let total = 0;
-
   for (let i = 0; i <= scores.length; i++) {
     total += scores[i];
   }
-
   return total / scores.length;
 }`,
-    choices: [
-      { id: "a", text: "let total = 0;" },
-      { id: "b", text: "for (let i = 0; i <= scores.length; i++) {" },
-      { id: "c", text: "return total / scores.length;" },
-      { id: "d", text: "function average(scores) {" }
+    inspectLines: [
+      "function average(scores) {",
+      "  let total = 0;",
+      "  for (let i = 0; i <= scores.length; i++) {",
+      "    total += scores[i];",
+      "  }",
+      "  return total / scores.length;",
+      "}"
     ],
-    correct: "b",
+    correct: "line-3",
     explanation:
       "The loop runs one step too far. When i equals scores.length, the code reads an item that does not exist, so that line deserves immediate scrutiny.",
     takeaway:
@@ -376,7 +371,9 @@ System.out.println(config.getTimeout());`,
     category: "CS Hallucinations",
     typeLabel: "Hallucination Check",
     title: "The JavaScript API method looks real, but isn't",
-    prompt: "What should make you most skeptical here?",
+    prompt: "Tap the exact line that should make you most skeptical.",
+    interactionType: "line-pick",
+    linePickSource: "chatOutput",
     chatPromptLabel: "Prompt",
     chatPrompt:
       "How can I turn a fetch response into JSON right away? Show me the cleanest built-in method.",
@@ -384,13 +381,7 @@ System.out.println(config.getTimeout());`,
     chatOutput: `const response = await fetch("/api/user");
 const user = response.toJSONSync();
 console.log(user.name);`,
-    choices: [
-      { id: "a", text: "The method is missing from trusted docs and tools." },
-      { id: "b", text: "The method name sounds technical and specific." },
-      { id: "c", text: "The chatbot included sample code using async." },
-      { id: "d", text: "The answer mentioned JSON parsing." }
-    ],
-    correct: "a",
+    correct: "line-2",
     explanation:
       "A technical answer can still invent methods. If the docs and your editor do not recognize the API, that is the strongest reason to doubt it.",
     takeaway:
@@ -480,7 +471,9 @@ console.log(user.name);`,
     category: "CS Hallucinations",
     typeLabel: "Hallucination Check",
     title: "The CSS property may be fake",
-    prompt: "What is the best verification move here?",
+    prompt: "Tap the exact line that deserves a docs check first.",
+    interactionType: "line-pick",
+    linePickSource: "chatOutput",
     chatPromptLabel: "Prompt",
     chatPrompt:
       "What is the quickest CSS fix to stack these cards vertically? Show me the property I should add.",
@@ -489,13 +482,7 @@ console.log(user.name);`,
   display: flex;
   layout-flow: stack;
 }`,
-    choices: [
-      { id: "a", text: "Trust it because it sounds like a real CSS feature." },
-      { id: "b", text: "Check MDN or other official docs before using it." },
-      { id: "c", text: "Rename the property slightly and hope the browser accepts it." },
-      { id: "d", text: "Cite the chatbot as the source of the fix." }
-    ],
-    correct: "b",
+    correct: "line-3",
     explanation:
       "When the browser and official docs do not support a property, you should assume the model may have invented it until verified.",
     takeaway:
@@ -571,9 +558,11 @@ const hallucinationPromptLabel = document.getElementById("hallucination-prompt-l
 const hallucinationPromptText = document.getElementById("hallucination-prompt-text");
 const hallucinationOutputLabel = document.getElementById("hallucination-output-label");
 const hallucinationOutputView = document.getElementById("hallucination-output-view");
+const hallucinationOutputInspector = document.getElementById("hallucination-output-inspector");
 const codeLayout = document.getElementById("code-layout");
 const codeLabel = document.getElementById("code-label");
 const codeView = document.getElementById("code-view");
+const codeInspector = document.getElementById("code-inspector");
 const codeQuestionTitle = document.getElementById("code-question-title");
 const codeClaim = document.getElementById("code-claim");
 const answerForm = document.getElementById("answer-form");
@@ -674,6 +663,49 @@ function updateStatus(message) {
   streakText.textContent = `Judgment tracker: ${getJudgmentTrackerLabel(state.correctStreak)}`;
 }
 
+function isLinePickQuestion(question) {
+  return question.interactionType === "line-pick";
+}
+
+function getInspectableLines(question) {
+  if (question.inspectLines?.length) {
+    return question.inspectLines;
+  }
+
+  if (question.linePickSource === "code" && question.code) {
+    return question.code.split("\n");
+  }
+
+  if (question.linePickSource === "chatOutput" && question.chatOutput) {
+    return question.chatOutput.split("\n");
+  }
+
+  return [];
+}
+
+function getInspectableTarget(question) {
+  if (question.linePickSource === "chatOutput") {
+    return {
+      staticView: hallucinationOutputView,
+      interactiveView: hallucinationOutputInspector
+    };
+  }
+
+  return {
+    staticView: codeView,
+    interactiveView: codeInspector
+  };
+}
+
+function resetInspectableViews() {
+  hallucinationOutputView.classList.remove("hidden");
+  hallucinationOutputInspector.classList.add("hidden");
+  hallucinationOutputInspector.innerHTML = "";
+  codeView.classList.remove("hidden");
+  codeInspector.classList.add("hidden");
+  codeInspector.innerHTML = "";
+}
+
 function buildChoiceButton(choice, index) {
   const button = document.createElement("button");
   const toneClass = ["tone-a", "tone-b", "tone-c", "tone-d", "tone-e"][index] || "tone-a";
@@ -699,9 +731,76 @@ function buildChoiceButton(choice, index) {
   return button;
 }
 
+function buildInspectableLineButton(question, lineText, index) {
+  const button = document.createElement("button");
+  const lineId = `line-${index + 1}`;
+  const number = document.createElement("span");
+  const text = document.createElement("span");
+  const isSelected = state.selectedAnswerId === lineId;
+
+  button.type = "button";
+  button.className = "inspect-line";
+  button.dataset.choiceId = lineId;
+  button.setAttribute("aria-pressed", isSelected ? "true" : "false");
+
+  number.className = "inspect-line-number";
+  number.textContent = String(index + 1);
+  text.className = "inspect-line-text";
+  text.textContent = lineText || " ";
+
+  button.append(number, text);
+
+  if (isSelected) {
+    button.classList.add("selected");
+  }
+
+  if (state.answered) {
+    button.disabled = true;
+
+    if (lineId === question.correct) {
+      button.classList.add("correct");
+    } else if (isSelected) {
+      button.classList.add("incorrect");
+    }
+  }
+
+  button.addEventListener("click", () => {
+    if (state.answered) {
+      return;
+    }
+
+    state.selectedAnswerId = lineId;
+    renderChoices();
+  });
+
+  return button;
+}
+
+function renderInspectableLines(question) {
+  const { staticView, interactiveView } = getInspectableTarget(question);
+
+  staticView.classList.add("hidden");
+  interactiveView.classList.remove("hidden");
+  interactiveView.innerHTML = "";
+
+  getInspectableLines(question).forEach((lineText, index) => {
+    interactiveView.appendChild(buildInspectableLineButton(question, lineText, index));
+  });
+}
+
 function renderChoices() {
-  answerGrid.innerHTML = "";
   const question = getCurrentQuestion();
+
+  if (isLinePickQuestion(question)) {
+    answerGrid.innerHTML = "";
+    answerGrid.classList.add("hidden");
+    renderInspectableLines(question);
+    submitButton.disabled = state.selectedAnswerId === null || state.answered;
+    return;
+  }
+
+  answerGrid.classList.remove("hidden");
+  answerGrid.innerHTML = "";
 
   question.choices.forEach((choice, index) => {
     const button = buildChoiceButton(choice, index);
@@ -864,9 +963,11 @@ function renderQuestion() {
   const scaffolding = scaffoldingByCategory[question.category];
   const hintHidden = state.correctStreak >= 2;
   const hasChatExchange = Boolean(question.chatPrompt && question.chatOutput);
+  const linePickQuestion = isLinePickQuestion(question);
 
   clearAdvanceTimer();
   hideReflectionOverlay();
+  resetInspectableViews();
   caseTitle.textContent = `Case ${state.currentQuestionIndex + 1} of ${questions.length}`;
   questionCount.textContent = `Case ${state.currentQuestionIndex + 1} / ${questions.length}`;
   questionLabel.textContent = `Case ${state.currentQuestionIndex + 1}`;
@@ -927,11 +1028,26 @@ function renderQuestion() {
   reflectionStatus.textContent = "";
   reflectionStatus.classList.add("hidden");
   resultsCard.classList.add("hidden");
-  submitButton.textContent = "Submit decision";
+  submitButton.textContent = linePickQuestion ? "Submit highlighted line" : "Submit decision";
 
-  updateStatus("Work through the scenario and submit your strongest decision.");
+  updateStatus(
+    linePickQuestion
+      ? "Inspect the case directly, highlight the line you would check first, and submit your decision."
+      : "Work through the scenario and submit your strongest decision."
+  );
   navigateTo(`case-${state.currentQuestionIndex + 1}`);
   startTimer(Math.round(question.timeLimit * CASE_TIME_MULTIPLIER));
+}
+
+function getCorrectAnswerText(question) {
+  if (isLinePickQuestion(question)) {
+    const correctIndex = Number(question.correct.replace("line-", "")) - 1;
+    const lineText = getInspectableLines(question)[correctIndex] || "";
+    return `Line ${correctIndex + 1}: ${lineText.trim() || "(blank line)"}`;
+  }
+
+  const correctChoice = question.choices.find((choice) => choice.id === question.correct);
+  return correctChoice ? correctChoice.text : "the strongest move";
 }
 
 function finalizeAnswer(selectedAnswerId, timedOut = false) {
@@ -980,9 +1096,8 @@ function finalizeAnswer(selectedAnswerId, timedOut = false) {
     updateStatus("Review the explanation and adjust your next decision.");
   }
 
-  const correctChoice = question.choices.find((choice) => choice.id === question.correct);
   feedbackBody.textContent =
-    `Strongest move: ${correctChoice.text}. ${question.explanation} ${question.takeaway}`;
+    `${isLinePickQuestion(question) ? "Best line to inspect first" : "Strongest move"}: ${getCorrectAnswerText(question)}. ${question.explanation} ${question.takeaway}`;
   feedbackCard.classList.remove("hidden");
 
   const outcomeKey = timedOut ? "timeout" : isCorrect ? "correct" : "incorrect";

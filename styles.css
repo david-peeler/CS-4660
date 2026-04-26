@@ -598,6 +598,69 @@ button {
   word-break: break-word;
 }
 
+.inspect-view {
+  display: grid;
+  gap: 6px;
+  min-height: 156px;
+  padding: 10px 12px;
+  border: 2px solid rgba(217, 228, 255, 0.28);
+  background: #162149;
+}
+
+.inspect-line {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+  width: 100%;
+  padding: 8px 10px;
+  border: 2px solid rgba(217, 228, 255, 0.16);
+  background: rgba(255, 255, 255, 0.03);
+  color: #eef4ff;
+  text-align: left;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.84rem;
+  line-height: 1.35;
+  cursor: pointer;
+  transition: transform 140ms ease, border-color 140ms ease, background 140ms ease;
+}
+
+.inspect-line:hover,
+.inspect-line:focus-visible {
+  transform: translateY(-1px);
+  border-color: rgba(217, 228, 255, 0.42);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.inspect-line-number {
+  color: #9fb3ff;
+  font-weight: 700;
+}
+
+.inspect-line-text {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.inspect-line.selected {
+  border-color: var(--yellow);
+  background: rgba(255, 216, 61, 0.14);
+}
+
+.inspect-line.correct {
+  border-color: var(--green);
+  background: rgba(36, 194, 106, 0.18);
+}
+
+.inspect-line.incorrect {
+  border-color: var(--red);
+  background: rgba(255, 90, 95, 0.18);
+}
+
+.inspect-line:disabled {
+  cursor: default;
+  transform: none;
+}
+
 .answer-panel {
   margin-top: 10px;
 }

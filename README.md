@@ -9,6 +9,8 @@ The current experience includes four kinds of cases:
 - Evidence matching to the right verifier
 - Prompt surgery around acceptable and unacceptable classroom AI use
 
+The interaction style now mixes standard decision buttons with direct inspection tasks, including cases where learners click the exact line in code or model output that deserves scrutiny.
+
 ## How to run
 
 Open [index.html](./index.html) directly in a browser, or serve the folder with a static server.
