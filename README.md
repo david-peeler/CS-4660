@@ -1,10 +1,15 @@
 # AI Arena
 
-AI Arena is a student-facing, Kahoot-style web game about responsible classroom AI use. It mixes three kinds of rounds:
+AI Arena is a student-facing verification lab about responsible classroom AI use in computer science contexts. Learners work through case-based scenarios that ask them to inspect prompts, model outputs, and generated code, then make a defensible judgment about what to trust, how to verify it, and whether a use of AI fits classroom expectations.
 
-- LLM hallucination spotting
+The current experience includes four kinds of cases:
+
+- LLM hallucination spotting with prompt and model-output views
 - Code verification with AI-generated snippets
-- Teacher framework calls about when AI is allowed, allowed with limits, or not allowed
+- Evidence matching to the right verifier
+- Prompt surgery around acceptable and unacceptable classroom AI use
+
+The interaction style now mixes standard decision buttons with direct inspection tasks, including cases where learners click the exact line in code or model output that deserves scrutiny.
 
 ## How to run
 

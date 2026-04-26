@@ -72,7 +72,6 @@ button {
 
 .masthead,
 .framework-board,
-.leaderboard-card,
 .question-card,
 .feedback-card,
 .reflection-card,
@@ -83,7 +82,6 @@ button {
 .editor-card,
 .prompt-card,
 .result-panel,
-.leaderboard-row,
 .intro-card,
 .scaffold-card,
 .hint-panel {
@@ -104,7 +102,6 @@ button {
 
 .framework-board,
 .intro-card,
-.leaderboard-card,
 .question-card,
 .reflection-card,
 .results-card,
@@ -123,7 +120,7 @@ button {
 .eyebrow,
 .section-kicker,
 .meta-label,
-.points-chip {
+.evidence-chip {
   letter-spacing: 0.12em;
   text-transform: uppercase;
   font-size: 0.74rem;
@@ -137,7 +134,6 @@ button {
 
 .masthead h1,
 .framework-board h2,
-.competition-board h2,
 .question-card h3,
 .results-card h3,
 .result-panel h4,
@@ -169,8 +165,9 @@ button {
 }
 
 .framework-grid,
-.match-meta,
+.review-meta,
 .results-grid,
+.hallucination-layout,
 .code-layout,
 .answer-grid,
 .intro-page,
@@ -184,6 +181,10 @@ button {
   align-items: start;
 }
 
+#intro-view .intro-page {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 .question-page {
   grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.65fr);
   align-items: start;
@@ -192,7 +193,6 @@ button {
 .intro-main,
 .question-stage,
 .question-sidebar,
-.lobby-sidebar,
 .results-page {
   display: grid;
   gap: 10px;
@@ -219,13 +219,16 @@ button {
 }
 
 #intro-view .intro-card,
-#intro-view .framework-board,
-#intro-view .leaderboard-card {
+#intro-view .framework-board {
   padding: 14px;
 }
 
 #intro-view .framework-grid {
   grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+#intro-view .intro-main {
+  max-width: 1040px;
 }
 
 #intro-view .framework-card {
@@ -244,6 +247,7 @@ button {
 
 #question-view .question-page {
   gap: 12px;
+  position: relative;
 }
 
 #question-view .question-stage,
@@ -252,6 +256,7 @@ button {
   border: 4px solid #ffffff;
   background: var(--surface-strong);
   border-radius: var(--radius-md);
+  transition: filter 160ms ease, opacity 160ms ease;
 }
 
 #question-view .question-stage {
@@ -358,7 +363,6 @@ button {
 }
 
 .meta-card,
-.leaderboard-card,
 .question-card,
 .feedback-card,
 .results-card,
@@ -445,16 +449,11 @@ button {
 }
 
 #question-view .question-card,
-#question-view .leaderboard-card,
 #question-view .framework-board {
   border: 0;
   border-radius: 0;
   background: transparent;
   padding: 0;
-}
-
-#question-view .leaderboard-card .panel-copy {
-  display: none;
 }
 
 #question-view .question-card > * + * {
@@ -463,7 +462,7 @@ button {
   border-top: 2px solid rgba(16, 22, 47, 0.16);
 }
 
-#question-view .match-meta {
+#question-view .review-meta {
   gap: 0;
   padding: 14px;
   border: var(--border-strong);
@@ -482,51 +481,6 @@ button {
   margin-top: 12px;
   padding-top: 12px;
   border-top: 2px solid rgba(16, 22, 47, 0.22);
-}
-
-.leaderboard-list {
-  display: grid;
-  gap: 8px;
-}
-
-.leaderboard-row {
-  display: grid;
-  grid-template-columns: auto 1fr auto auto;
-  gap: 10px;
-  align-items: center;
-  padding: 10px 12px;
-  border: var(--border-strong);
-  background: var(--blue-tint);
-}
-
-.leaderboard-row.lobby-row {
-  grid-template-columns: auto 1fr auto;
-}
-
-.leaderboard-row.current-player {
-  background: var(--yellow-tint);
-}
-
-.leaderboard-rank {
-  width: 2.4rem;
-  font-weight: 800;
-  color: var(--ink);
-}
-
-.player-name {
-  font-weight: 800;
-}
-
-.player-note,
-.player-streak {
-  color: var(--muted);
-  font-size: 0.84rem;
-}
-
-.player-score {
-  font-family: "IBM Plex Mono", monospace;
-  font-weight: 800;
-  color: var(--purple);
 }
 
 #question-view .framework-card {
@@ -561,6 +515,12 @@ button {
 
 #question-view .code-layout {
   grid-template-columns: minmax(0, 1.1fr) minmax(280px, 0.9fr);
+  align-items: start;
+  gap: 10px;
+}
+
+#question-view .hallucination-layout {
+  grid-template-columns: minmax(280px, 0.9fr) minmax(0, 1.1fr);
   align-items: start;
   gap: 10px;
 }
@@ -638,19 +598,75 @@ button {
   word-break: break-word;
 }
 
+.inspect-view {
+  display: grid;
+  gap: 6px;
+  min-height: 156px;
+  padding: 10px 12px;
+  border: 2px solid rgba(217, 228, 255, 0.28);
+  background: #162149;
+}
+
+.inspect-line {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+  width: 100%;
+  padding: 8px 10px;
+  border: 2px solid rgba(217, 228, 255, 0.16);
+  background: rgba(255, 255, 255, 0.03);
+  color: #eef4ff;
+  text-align: left;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.84rem;
+  line-height: 1.35;
+  cursor: pointer;
+  transition: transform 140ms ease, border-color 140ms ease, background 140ms ease;
+}
+
+.inspect-line:hover,
+.inspect-line:focus-visible {
+  transform: translateY(-1px);
+  border-color: rgba(217, 228, 255, 0.42);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.inspect-line-number {
+  color: #9fb3ff;
+  font-weight: 700;
+}
+
+.inspect-line-text {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.inspect-line.selected {
+  border-color: var(--yellow);
+  background: rgba(255, 216, 61, 0.14);
+}
+
+.inspect-line.correct {
+  border-color: var(--green);
+  background: rgba(36, 194, 106, 0.18);
+}
+
+.inspect-line.incorrect {
+  border-color: var(--red);
+  background: rgba(255, 90, 95, 0.18);
+}
+
+.inspect-line:disabled {
+  cursor: default;
+  transform: none;
+}
+
 .answer-panel {
   margin-top: 10px;
 }
 
 #question-view .answer-grid {
   grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
-.post-round-panels {
-  display: grid;
-  grid-template-columns: minmax(0, 1.1fr) minmax(280px, 0.9fr);
-  gap: 12px;
-  align-items: start;
 }
 
 .answer-choice {
@@ -791,6 +807,30 @@ button {
   font-size: 0.92rem;
 }
 
+.reflection-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(16, 22, 47, 0.24);
+}
+
+.reflection-modal {
+  width: min(720px, 100%);
+  display: grid;
+  gap: 12px;
+}
+
+#question-view .question-page.is-reflecting > .question-stage,
+#question-view .question-page.is-reflecting > .question-sidebar {
+  filter: blur(12px);
+  opacity: 0.72;
+  pointer-events: none;
+  user-select: none;
+}
+
 .reflection-card {
   background: var(--yellow-tint);
 }
@@ -809,22 +849,56 @@ button {
   background: transparent;
 }
 
+.reflection-content {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+}
+
+.reflection-note-block {
+  display: grid;
+  gap: 4px;
+}
+
+.reflection-note-copy {
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.35;
+}
+
+.reflection-note {
+  width: 100%;
+  padding: 10px 12px;
+  border: var(--border-strong);
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.86);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.86rem;
+  line-height: 1.35;
+  resize: none;
+}
+
+.reflection-note:focus-visible {
+  outline: 4px solid rgba(16, 22, 47, 0.18);
+  outline-offset: 1px;
+}
+
 .reflection-options {
   display: grid;
   grid-template-columns: 1fr;
   gap: 8px;
-  padding: 12px;
 }
 
 .reflection-choice {
   width: 100%;
   min-height: 100%;
-  padding: 10px 12px;
+  padding: 9px 11px;
   border: var(--border-strong);
   background: rgba(255, 255, 255, 0.88);
   text-align: left;
   font-weight: 700;
-  font-size: 0.86rem;
+  font-size: 0.82rem;
   line-height: 1.25;
   cursor: pointer;
   transition: transform 140ms ease, filter 140ms ease, background 140ms ease;
@@ -842,15 +916,24 @@ button {
   outline-offset: -4px;
 }
 
+.reflection-choice:disabled {
+  cursor: default;
+  transform: none;
+  filter: none;
+}
+
 .reflection-status {
   margin: 0;
-  padding: 0 12px;
   font-weight: 700;
   font-size: 0.82rem;
   color: var(--ink);
 }
 
-.points-chip {
+.reflection-card.is-advancing {
+  pointer-events: none;
+}
+
+.evidence-chip {
   padding: 8px 12px;
   border: var(--border-strong);
   background: var(--purple);
@@ -898,8 +981,8 @@ button {
   .intro-page,
   .question-page,
   .results-grid,
-  .code-layout,
-  .post-round-panels {
+  .hallucination-layout,
+  .code-layout {
     grid-template-columns: 1fr;
   }
 
@@ -914,10 +997,13 @@ button {
     padding: 16px;
   }
 
+  .reflection-overlay {
+    padding: 12px;
+  }
+
   .masthead,
   .framework-board,
   .meta-card,
-  .leaderboard-card,
   .question-card,
   .feedback-card,
   .reflection-card,
@@ -929,13 +1015,5 @@ button {
 
   .masthead h1 {
     max-width: none;
-  }
-
-  .leaderboard-row {
-    grid-template-columns: auto 1fr;
-  }
-
-  .leaderboard-row.lobby-row {
-    grid-template-columns: auto 1fr;
   }
 }
