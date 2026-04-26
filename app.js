@@ -988,7 +988,13 @@ function finalizeAnswer(selectedAnswerId, timedOut = false) {
   if (question.type === "short-answer") {
     const userAnswer = (selectedAnswerId || "").toLowerCase().trim();
     const expectedAnswer = question.expectedAnswer.toLowerCase().trim();
-    isCorrect = userAnswer.includes(expectedAnswer) || expectedAnswer.includes(userAnswer);
+
+    // Split expected answer into keywords (words longer than 3 chars)
+    const keywords = expectedAnswer.split(/\s+/).filter(word => word.length > 3);
+
+    // Check if at least 50% of keywords are present in user answer
+    const matchedKeywords = keywords.filter(keyword => userAnswer.includes(keyword)).length;
+    isCorrect = matchedKeywords >= Math.ceil(keywords.length * 0.5);
   } else {
     isCorrect = selectedAnswerId === question.correct;
   }
