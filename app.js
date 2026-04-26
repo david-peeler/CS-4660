@@ -181,18 +181,13 @@ const questions = [
     id: "hallucination-python-docs",
     category: "CS Hallucinations",
     typeLabel: "Hallucination Check",
+    type: "short-answer",
     title: "The Python method may be invented",
     prompt: "What is the strongest sign that the chatbot may be hallucinating about this Python feature?",
     scenarioLabel: "Model response",
     scenario:
       "A chatbot says Python lists have a built-in method called sort_copy() and claims it was added recently, but you cannot find it in the official Python documentation.",
-    choices: [
-      { id: "a", text: "The explanation sounded very confident." },
-      { id: "b", text: "The method does not appear in the official docs." },
-      { id: "c", text: "The method name sounds useful for programmers." },
-      { id: "d", text: "The answer included example code." }
-    ],
-    correct: "b",
+    expectedAnswer: "the method does not appear in the official docs",
     explanation:
       "Confidence is not proof. If an API or method name is missing from the official docs, that is a strong hallucination warning sign.",
     takeaway:
@@ -227,25 +222,20 @@ const questions = [
     id: "code-even-counter",
     category: "Code Verification",
     typeLabel: "Code Check",
+    type: "short-answer",
     title: "Verify the claim, not the confidence",
-    prompt: "Which move best verifies the model's claim before you trust this function?",
+    prompt: "What verification move would best expose a bug in this function?",
     codeLabel: "LLM-generated Python",
     codeQuestionTitle: "The model claims this function counts even numbers in a list.",
     codeClaim:
-      "You should not accept that claim just because the code looks clean. Pick the verification move that would most quickly expose a bug if one exists.",
+      "You should not accept that claim just because the code looks clean. Describe the verification move that would most quickly expose a bug if one exists.",
     code: `def count_even(nums):
     total = 0
     for num in nums:
         if num % 2 == 1:
             total += 1
     return total`,
-    choices: [
-      { id: "a", text: "Rename total to even_total so the code reads more clearly." },
-      { id: "b", text: "Run short tests with known answers, including all-even and all-odd lists." },
-      { id: "c", text: "Ask the model if it is completely sure the function works." },
-      { id: "d", text: "Trust it because the loop and if statement look correct at first glance." }
-    ],
-    correct: "b",
+    expectedAnswer: "run tests with known answers",
     explanation:
       "Verification means testing the claim against known cases. An all-even list would immediately show that the code is counting odd numbers instead.",
     takeaway:
@@ -257,19 +247,13 @@ const questions = [
     id: "evidence-official-docs",
     category: "Evidence Match",
     typeLabel: "Evidence Match",
+    type: "short-answer",
     title: "Match the claim to the best verification source",
-    prompt: "A chatbot says JavaScript arrays have a built-in method named removeAt(). Which source is the best way to verify that claim?",
+    prompt: "A chatbot says JavaScript arrays have a built-in method named removeAt(). What is the best way to verify that claim?",
     scenarioLabel: "Claim",
     scenario:
       "You want to confirm whether removeAt() is a real JavaScript array method before you use it in your code.",
-    choices: [
-      { id: "a", text: "Official docs" },
-      { id: "b", text: "Dev tools" },
-      { id: "c", text: "Unit test" },
-      { id: "d", text: "Teacher policy" },
-      { id: "e", text: "Don't trust it yet" }
-    ],
-    correct: "a",
+    expectedAnswer: "official docs",
     explanation:
       "API and method-name claims are best checked in official documentation such as MDN or other primary docs.",
     takeaway:
@@ -304,18 +288,13 @@ const questions = [
     id: "prompt-full-solution",
     category: "Prompt Surgery",
     typeLabel: "Prompt Surgery",
+    type: "short-answer",
     title: "Spot the unsafe rewrite",
     prompt: "Which rewritten prompt most clearly asks AI to do the graded CS work for the student?",
     scenarioLabel: "Class policy",
     scenario:
       "Your class allows hints and explanations, but not ready-to-submit solutions for labs or projects.",
-    choices: [
-      { id: "a", text: "Quiz me on recursion with practice questions." },
-      { id: "b", text: "Review my pseudocode and tell me one weak spot." },
-      { id: "c", text: "Write my full Java sorting lab so I can turn it in tonight." },
-      { id: "d", text: "Explain what a base case does in recursion." }
-    ],
-    correct: "c",
+    expectedAnswer: "write my full java sorting lab",
     explanation:
       "That prompt asks AI to generate the final deliverable for a graded task, which replaces the student's work rather than supporting it.",
     takeaway:
@@ -768,29 +747,46 @@ function renderChoices() {
   answerGrid.innerHTML = "";
   const question = getCurrentQuestion();
 
-  question.choices.forEach((choice, index) => {
-    const button = buildChoiceButton(choice, index);
-    const isSelected = choice.id === state.selectedAnswerId;
+  if (question.type === "short-answer") {
+    const input = document.createElement("textarea");
+    input.id = "short-answer-input";
+    input.className = "short-answer-textarea";
+    input.placeholder = "Type your answer here...";
+    input.value = state.selectedAnswerId || "";
+    input.disabled = state.answered;
 
-    if (isSelected) {
-      button.classList.add("selected");
-      button.setAttribute("aria-pressed", "true");
-    }
+    input.addEventListener("input", () => {
+      state.selectedAnswerId = input.value.trim();
+      submitButton.disabled = state.selectedAnswerId === "" || state.answered;
+    });
 
-    if (state.answered) {
-      button.disabled = true;
+    answerGrid.appendChild(input);
+    submitButton.disabled = (state.selectedAnswerId || "").trim() === "" || state.answered;
+  } else {
+    question.choices.forEach((choice, index) => {
+      const button = buildChoiceButton(choice, index);
+      const isSelected = choice.id === state.selectedAnswerId;
 
-      if (choice.id === question.correct) {
-        button.classList.add("correct");
-      } else {
-        button.classList.add("incorrect");
+      if (isSelected) {
+        button.classList.add("selected");
+        button.setAttribute("aria-pressed", "true");
       }
-    }
 
-    answerGrid.appendChild(button);
-  });
+      if (state.answered) {
+        button.disabled = true;
 
-  submitButton.disabled = state.selectedAnswerId === null || state.answered;
+        if (choice.id === question.correct) {
+          button.classList.add("correct");
+        } else {
+          button.classList.add("incorrect");
+        }
+      }
+
+      answerGrid.appendChild(button);
+    });
+
+    submitButton.disabled = state.selectedAnswerId === null || state.answered;
+  }
 }
 
 function clearTimer() {
@@ -987,7 +983,16 @@ function finalizeAnswer(selectedAnswerId, timedOut = false) {
 
   const question = getCurrentQuestion();
   const player = getPlayer("you");
-  const isCorrect = selectedAnswerId === question.correct;
+
+  let isCorrect;
+  if (question.type === "short-answer") {
+    const userAnswer = (selectedAnswerId || "").toLowerCase().trim();
+    const expectedAnswer = question.expectedAnswer.toLowerCase().trim();
+    isCorrect = userAnswer.includes(expectedAnswer) || expectedAnswer.includes(userAnswer);
+  } else {
+    isCorrect = selectedAnswerId === question.correct;
+  }
+
   const earnedPoints = calculateEarnedPoints(question, isCorrect);
 
   if (isCorrect) {
@@ -1026,9 +1031,14 @@ function finalizeAnswer(selectedAnswerId, timedOut = false) {
     updateStatus("You missed this one. Use the explanation to sharpen the next decision.");
   }
 
-  const correctChoice = question.choices.find((choice) => choice.id === question.correct);
-  feedbackBody.textContent =
-    `Correct: ${correctChoice.text}. ${question.explanation} ${question.takeaway}`;
+  let feedbackText;
+  if (question.type === "short-answer") {
+    feedbackText = `Expected answer: ${question.expectedAnswer}. ${question.explanation} ${question.takeaway}`;
+  } else {
+    const correctChoice = question.choices.find((choice) => choice.id === question.correct);
+    feedbackText = `Correct: ${correctChoice.text}. ${question.explanation} ${question.takeaway}`;
+  }
+  feedbackBody.textContent = feedbackText;
   postRoundPanels.classList.remove("hidden");
   feedbackCard.classList.remove("hidden");
 

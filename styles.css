@@ -878,6 +878,30 @@ button {
   display: none;
 }
 
+.short-answer-textarea {
+  width: 100%;
+  min-height: 120px;
+  padding: 12px 14px;
+  border: var(--border-strong);
+  font-family: inherit;
+  font-size: 1rem;
+  line-height: 1.4;
+  resize: vertical;
+  background: var(--surface-strong);
+  color: var(--ink);
+}
+
+.short-answer-textarea:focus {
+  outline: 4px solid var(--blue);
+  outline-offset: -4px;
+}
+
+.short-answer-textarea:disabled {
+  background: rgba(16, 22, 47, 0.08);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
 @keyframes view-in {
   from {
     opacity: 0;
